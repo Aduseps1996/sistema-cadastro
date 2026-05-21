@@ -10,7 +10,8 @@ import {
   orderBy,
   serverTimestamp,
   doc,
-  updateDoc
+  updateDoc,
+  setDoc
 } from "firebase/firestore"
 
 import {
@@ -164,7 +165,7 @@ export default function UsuariosPage() {
     // =====================================================
     // SALVA NO FIRESTORE
     // =====================================================
-    await addDoc(collection(db, "usuarios"), {
+    await setDoc(doc(db, "usuarios", credencial.user.uid), {
       uid: credencial.user.uid,
       nome: nome.trim(),
       email: emailFormatado,

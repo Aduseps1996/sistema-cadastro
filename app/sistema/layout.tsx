@@ -12,10 +12,8 @@ import {
 } from "firebase/auth"
 
 import {
-  collection,
-  query,
-  where,
-  getDocs
+  doc,
+  getDoc
 } from "firebase/firestore"
 
 import {
@@ -158,28 +156,21 @@ export default function SistemaLayout({
         // ---------------------------------------------
         // BUSCA DO USUÁRIO NA COLEÇÃO "usuarios"
         // ---------------------------------------------
-        const consultaUsuario = query(
-          collection(db, "usuarios"),
-          where("email", "==", usuario.email)
-        )
+        const usuarioRef = doc(db, "usuarios", usuario.uid)
 
-        const resultado = await getDocs(consultaUsuario)
+          const usuarioSnap = await getDoc(usuarioRef)
 
-        // ---------------------------------------------
-        // USUÁRIO SEM CADASTRO INTERNO
-        // ---------------------------------------------
-        if (resultado.empty) {
-          alert("Usuário sem permissão no sistema.")
+          if (!usuarioSnap.exists()) {
+            alert("Usuário sem permissão no sistema.")
 
-          await signOut(auth)
+            await signOut(auth)
 
-          router.replace("/login")
-          return
-        }
+            router.replace("/login")
+            return
+          }
 
-        const dadosUsuario =
-          resultado.docs[0].data() as UsuarioSistema
-
+          const dadosUsuario =
+            usuarioSnap.data() as UsuarioSistema
         // ---------------------------------------------
         // USUÁRIO INATIVO
         // ---------------------------------------------
