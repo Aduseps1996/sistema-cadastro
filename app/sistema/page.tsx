@@ -1,12 +1,26 @@
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
+// =====================================================
+// PÁGINA BASE DO SISTEMA
+// =====================================================
+// Essa rota é "/sistema".
+//
+// Como não existe uma tela principal solta em "/sistema",
+// ela redireciona automaticamente para "/sistema/inicio".
 export default function SistemaPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    router.replace("/sistema/inicio")
+  }, [router])
+
   return (
     <div>
-      <h1 className="text-4xl font-black mb-2">
-        Sistema de Atendimento
-      </h1>
-
-      <p className="text-zinc-400">
-        Painel administrativo da ADUSEPS.
+      <p className="text-sm text-zinc-400">
+        Redirecionando para o início...
       </p>
     </div>
   )

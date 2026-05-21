@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import {
   collection,
@@ -14,6 +15,11 @@ import {
 } from "firebase/firestore"
 
 import { db } from "../../../lib/firebase"
+import { useUsuario } from "../../context/UsuarioContext"
+
+// =====================================================
+// TIPOS DAS ENTIDADES
+// =====================================================
 
 type Pessoa = {
   id?: string
@@ -31,17 +37,55 @@ type Associado = {
 }
 
 export default function AssociadosPage() {
+  // =====================================================
+  // LISTAS VINDAS DO FIRESTORE
+  // =====================================================
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [associados, setAssociados] = useState<Associado[]>([])
 
+  // =====================================================
+  // ESTADOS DO CADASTRO
+  // =====================================================
   const [pessoaId, setPessoaId] = useState("")
   const [matricula, setMatricula] = useState("")
   const [buscaPessoa, setBuscaPessoa] = useState("")
+
+  // =====================================================
+  // ESTADO DA PESQUISA DA TABELA
+  // =====================================================
   const [pesquisa, setPesquisa] = useState("")
 
+
+  // =====================================================
+  // CONTROLE DE PROCESSAMENTO DAS AÇÕES
+  // =====================================================
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState("")  
+
+  // =====================================================
+  // ESTADOS DA EDIÇÃO INLINE
+  // =====================================================
   const [editandoId, setEditandoId] = useState("")
   const [pessoaIdEdicao, setPessoaIdEdicao] = useState("")
   const [matriculaEdicao, setMatriculaEdicao] = useState("")
+
+  const { usuarioSistema } = useUsuario()
+  // =====================================================
+  // CONTROLE DE PERMISSÃO DE GERENCIAMENTO
+  // =====================================================
+  // Apenas Administrador e Recepção podem:
+  // - cadastrar
+  // - editar
+  // - inativar
+  // - reativar
+  const podeGerenciar =
+  usuarioSistema?.perfil === "Administrador" ||
+  usuarioSistema?.perfil === "Recepção"
+
+
+
+  // =====================================================
+  // BUSCA DE PESSOAS
+  // =====================================================
 
   useEffect(() => {
     const consultaPessoas = query(
@@ -61,6 +105,10 @@ export default function AssociadosPage() {
     return () => unsubscribePessoas()
   }, [])
 
+  // =====================================================
+  // BUSCA DE ASSOCIADOS
+  // =====================================================
+
   useEffect(() => {
     const consultaAssociados = query(
       collection(db, "associados"),
@@ -79,14 +127,25 @@ export default function AssociadosPage() {
     return () => unsubscribeAssociados()
   }, [])
 
+  // =====================================================
+  // ADICIONAR ASSOCIADO
+  // =====================================================
+
   async function adicionarAssociado() {
+    if (!podeGerenciar) {
+      toast.warning("Você não tem permissão para cadastrar associados.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
     if (pessoaId === "") {
-      alert("Selecione a pessoa.")
+      toast.warning("Selecione a pessoa.")
       return
     }
 
     if (matricula.trim() === "") {
-      alert("Informe a matrícula.")
+      toast.warning("Informe a matrícula.")
       return
     }
 
@@ -97,7 +156,7 @@ export default function AssociadosPage() {
     )
 
     if (matriculaExiste) {
-      alert("Esta matrícula já existe.")
+      toast.warning("Esta matrícula já existe.")
       return
     }
 
@@ -106,32 +165,47 @@ export default function AssociadosPage() {
     )
 
     if (pessoaJaAssociada) {
-      alert("Esta pessoa já possui cadastro de associado.")
+      toast.warning("Esta pessoa já possui cadastro de associado.")
       return
     }
 
-    await addDoc(collection(db, "associados"), {
-      pessoa_id: pessoaId,
-      matricula: matriculaFormatada,
-      ativo: true,
-      data_associacao: serverTimestamp(),
-      criado_em: serverTimestamp(),
-      atualizado_em: serverTimestamp()
-    })
+    try {
+      setAcaoEmAndamento("adicionar_associado")
 
-    setPessoaId("")
-    setMatricula("")
-    setBuscaPessoa("")
+      await addDoc(collection(db, "associados"), {
+        pessoa_id: pessoaId,
+        matricula: matriculaFormatada,
+        ativo: true,
+        data_associacao: serverTimestamp(),
+        criado_em: serverTimestamp(),
+        atualizado_em: serverTimestamp()
+      })
+
+      setPessoaId("")
+      setMatricula("")
+      setBuscaPessoa("")
+
+      toast.success("Associado cadastrado.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao cadastrar associado.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
+
+  // =====================================================
+  // SALVAR EDIÇÃO DO ASSOCIADO
+  // =====================================================
 
   async function salvarEdicaoAssociado(id: string) {
     if (pessoaIdEdicao === "") {
-      alert("Selecione a pessoa.")
+      toast.warning("Selecione a pessoa.")
       return
     }
 
     if (matriculaEdicao.trim() === "") {
-      alert("Informe a matrícula.")
+      toast.warning("Informe a matrícula.")
       return
     }
 
@@ -142,7 +216,7 @@ export default function AssociadosPage() {
     )
 
     if (matriculaExiste) {
-      alert("Esta matrícula já existe.")
+      toast.warning("Esta matrícula já existe.")
       return
     }
 
@@ -151,7 +225,7 @@ export default function AssociadosPage() {
     )
 
     if (pessoaJaAssociada) {
-      alert("Esta pessoa já possui cadastro de associado.")
+      toast.warning("Esta pessoa já possui cadastro de associado.")
       return
     }
 
@@ -161,15 +235,53 @@ export default function AssociadosPage() {
       atualizado_em: serverTimestamp()
     })
 
+    toast.success("Associado atualizado.")
     cancelarEdicao()
   }
 
+  // =====================================================
+  // INATIVAR / REATIVAR ASSOCIADO
+  // =====================================================
+
   async function alternarStatus(id: string, ativoAtual: boolean) {
-    await updateDoc(doc(db, "associados", id), {
-      ativo: !ativoAtual,
-      atualizado_em: serverTimestamp()
-    })
+
+    if (!podeGerenciar) {
+      toast.warning("Você não tem permissão.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
+    try {
+
+      setAcaoEmAndamento(`status_${id}`)
+
+      await updateDoc(doc(db, "associados", id), {
+        ativo: !ativoAtual,
+        atualizado_em: serverTimestamp()
+      })
+
+      toast.success(
+        ativoAtual
+          ? "Associado inativado."
+          : "Associado reativado."
+      )
+
+    } catch (error) {
+
+      console.error(error)
+
+      toast.error("Erro ao alterar status.")
+
+    } finally {
+
+      setAcaoEmAndamento("")
+    }
   }
+
+  // =====================================================
+  // CONTROLE DE EDIÇÃO
+  // =====================================================
 
   function iniciarEdicao(associado: Associado) {
     setEditandoId(associado.id || "")
@@ -181,7 +293,13 @@ export default function AssociadosPage() {
     setEditandoId("")
     setPessoaIdEdicao("")
     setMatriculaEdicao("")
+
+    toast.success("Edição cancelada.")
   }
+
+  // =====================================================
+  // FUNÇÕES AUXILIARES
+  // =====================================================
 
   function buscarPessoa(pessoa_id: string) {
     return pessoas.find((item) => item.id === pessoa_id)
@@ -191,16 +309,26 @@ export default function AssociadosPage() {
     return buscarPessoa(pessoa_id)?.nome || "Pessoa não encontrada"
   }
 
+  // =====================================================
+  // AUTOCOMPLETE DE PESSOA
+  // =====================================================
+
   const pessoasEncontradas = pessoas
     .filter((pessoa) => pessoa.ativo)
     .filter((pessoa) => {
       const termo = buscaPessoa.toLowerCase().trim()
 
-      if (termo.length < 2) return false
+      if (termo.length < 2) {
+        return false
+      }
 
       return pessoa.nome.toLowerCase().includes(termo)
     })
     .slice(0, 8)
+
+  // =====================================================
+  // FILTRO DA TABELA
+  // =====================================================
 
   const associadosFiltrados = associados.filter((associado) => {
     const termo = pesquisa.toLowerCase().trim()
@@ -213,197 +341,352 @@ export default function AssociadosPage() {
   })
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-4xl font-black mb-2">
-          Associados
-        </h1>
+    <div className="space-y-6">
+      {/* =====================================================
+          CABEÇALHO DA PÁGINA
+          ===================================================== */}
 
-        <p className="text-zinc-400">
-          Cadastro de associados da ADUSEPS.
-        </p>
-      </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+            Associados
+          </h1>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">
-          Novo associado
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar pessoa por nome"
-              value={buscaPessoa}
-              onChange={(e) => {
-                setBuscaPessoa(e.target.value)
-                setPessoaId("")
-              }}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 outline-none"
-            />
-
-            {buscaPessoa.trim().length >= 2 && pessoaId === "" && (
-              <div className="absolute z-20 mt-2 w-full bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden shadow-xl">
-                {pessoasEncontradas.length === 0 && (
-                  <p className="px-4 py-3 text-sm text-zinc-400">
-                    Nenhuma pessoa encontrada.
-                  </p>
-                )}
-
-                {pessoasEncontradas.map((pessoa) => (
-                  <button
-                    key={pessoa.id}
-                    type="button"
-                    onClick={() => {
-                      setPessoaId(pessoa.id || "")
-                      setBuscaPessoa(pessoa.nome)
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-zinc-700 text-sm"
-                  >
-                    {pessoa.nome}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <input
-            type="text"
-            placeholder="Matrícula"
-            value={matricula}
-            onChange={(e) => setMatricula(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 outline-none"
-          />
+          <p className="mt-1 text-sm text-zinc-500">
+            Cadastro de associados da ADUSEPS.
+          </p>
         </div>
 
-        <button
-          onClick={adicionarAssociado}
-          className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl font-bold"
-        >
-          Adicionar
-        </button>
-      </div>
-
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <h2 className="text-2xl font-bold">
-            Associados cadastrados
-          </h2>
-
+        <div className="w-full md:w-96">
           <input
             type="text"
             placeholder="Pesquisar por nome ou matrícula"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
-            className="w-full md:w-96 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 outline-none"
+            className="
+              h-11 w-full rounded-xl border border-zinc-700
+              bg-zinc-900 px-4 text-sm text-zinc-100
+              outline-none transition placeholder:text-zinc-500
+              focus:border-blue-500/60
+              focus:ring-2 focus:ring-blue-500/20
+            "
           />
         </div>
+      </div>
 
-        <div className="space-y-3">
-          {associadosFiltrados.length === 0 && (
-            <p className="text-zinc-500">
+      {/* =====================================================
+          CARD DE CADASTRO
+          ===================================================== */}
+      {podeGerenciar && (
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-zinc-100">
+              Novo associado
+            </h2>
+
+            <p className="mt-1 text-sm text-zinc-500">
+              Vincule uma pessoa cadastrada a uma matrícula de associado.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]">
+            {/* BUSCA DA PESSOA */}
+
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar pessoa por nome"
+                value={buscaPessoa}
+                onChange={(e) => {
+                  setBuscaPessoa(e.target.value)
+                  setPessoaId("")
+                }}
+                className="
+                  h-11 w-full rounded-xl border border-zinc-700
+                  bg-zinc-950 px-4 text-sm text-zinc-100
+                  outline-none transition placeholder:text-zinc-500
+                  focus:border-blue-500/60
+                  focus:ring-2 focus:ring-blue-500/20
+                "
+              />
+
+              {buscaPessoa.trim().length >= 2 && pessoaId === "" && (
+                <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+                  {pessoasEncontradas.length === 0 && (
+                    <p className="px-4 py-3 text-sm text-zinc-400">
+                      Nenhuma pessoa encontrada.
+                    </p>
+                  )}
+
+                  {pessoasEncontradas.map((pessoa) => (
+                    <button
+                      key={pessoa.id}
+                      type="button"
+                      onClick={() => {
+                        setPessoaId(pessoa.id || "")
+                        setBuscaPessoa(pessoa.nome)
+                      }}
+                      className="
+                        w-full px-4 py-3 text-left text-sm text-zinc-200
+                        transition hover:bg-zinc-800
+                      "
+                    >
+                      {pessoa.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* MATRÍCULA */}
+
+            <input
+              type="text"
+              placeholder="Matrícula"
+              value={matricula}
+              onChange={(e) => setMatricula(e.target.value)}
+              className="
+                h-11 rounded-xl border border-zinc-700
+                bg-zinc-950 px-4 text-sm text-zinc-100
+                outline-none transition placeholder:text-zinc-500
+                focus:border-blue-500/60
+                focus:ring-2 focus:ring-blue-500/20
+              "
+            />
+          </div>
+
+          <button
+            onClick={adicionarAssociado}
+            disabled={acaoEmAndamento === "adicionar_associado"}
+            className="
+              mt-4 h-11 rounded-xl border border-blue-500/40
+              bg-blue-600 px-5 text-sm font-semibold text-white
+              transition hover:bg-blue-500
+              disabled:cursor-not-allowed disabled:opacity-50
+            "
+          >
+            {acaoEmAndamento === "adicionar_associado"
+              ? "Adicionando..."
+              : "Adicionar associado"}
+          </button>
+        </section>
+      )}
+
+      {/* =====================================================
+          TABELA DE ASSOCIADOS
+          ===================================================== */}
+
+      <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm">
+        <div className="border-b border-zinc-800 px-5 py-4">
+          <h2 className="text-base font-semibold text-zinc-100">
+            Associados cadastrados
+          </h2>
+
+          <p className="mt-1 text-sm text-zinc-500">
+            {associadosFiltrados.length} registro(s) encontrado(s)
+          </p>
+        </div>
+
+        {associadosFiltrados.length === 0 && (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm font-medium text-zinc-300">
               Nenhum associado encontrado.
             </p>
-          )}
 
-          {associadosFiltrados.map((associado) => (
-            <div
-              key={associado.id}
-              className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-            >
-              <div className="flex-1">
-                {editandoId === associado.id ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <select
-                      value={pessoaIdEdicao}
-                      onChange={(e) => setPessoaIdEdicao(e.target.value)}
-                      className="bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2 outline-none"
+            <p className="mt-1 text-sm text-zinc-500">
+              Cadastre um novo associado ou ajuste a pesquisa.
+            </p>
+          </div>
+        )}
+
+        {associadosFiltrados.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-zinc-950/60 text-xs uppercase tracking-wider text-zinc-500">
+                <tr>
+                  <th className="px-5 py-3 text-left font-semibold">
+                    Associado
+                  </th>
+
+                  <th className="w-40 px-5 py-3 text-left font-semibold">
+                    Matrícula
+                  </th>
+
+                  <th className="w-32 px-5 py-3 text-left font-semibold">
+                    Status
+                  </th>
+
+                  {podeGerenciar && (
+                    <th className="w-56 px-5 py-3 text-right font-semibold">
+                      Ações
+                    </th>
+                  )}
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-zinc-800">
+                {associadosFiltrados.map((associado) => {
+                  const estaEditando = editandoId === associado.id
+
+                  return (
+                    <tr
+                      key={associado.id}
+                      className="transition hover:bg-zinc-800/50"
                     >
-                      <option value="">
-                        Selecione a pessoa
-                      </option>
-
-                      {pessoas
-                        .filter(
-                          (pessoa) =>
-                            pessoa.ativo ||
-                            pessoa.id === associado.pessoa_id
-                        )
-                        .map((pessoa) => (
-                          <option
-                            key={pessoa.id}
-                            value={pessoa.id}
+                      <td className="px-5 py-3 align-middle">
+                        {estaEditando ? (
+                          <select
+                            value={pessoaIdEdicao}
+                            onChange={(e) => setPessoaIdEdicao(e.target.value)}
+                            className="
+                              h-10 w-full rounded-lg border border-zinc-700
+                              bg-zinc-950 px-3 text-sm text-zinc-100
+                              outline-none transition
+                              focus:border-blue-500/60
+                              focus:ring-2 focus:ring-blue-500/20
+                            "
                           >
-                            {pessoa.nome}
-                          </option>
-                        ))}
-                    </select>
+                            <option value="">Selecione a pessoa</option>
 
-                    <input
-                      type="text"
-                      value={matriculaEdicao}
-                      onChange={(e) => setMatriculaEdicao(e.target.value)}
-                      className="bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2 outline-none"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <p className="font-bold text-lg">
-                      {buscarNomePessoa(associado.pessoa_id)}
-                    </p>
+                            {pessoas
+                              .filter(
+                                (pessoa) =>
+                                  pessoa.ativo ||
+                                  pessoa.id === associado.pessoa_id
+                              )
+                              .map((pessoa) => (
+                                <option key={pessoa.id} value={pessoa.id}>
+                                  {pessoa.nome}
+                                </option>
+                              ))}
+                          </select>
+                        ) : (
+                          <div>
+                            <p className="font-semibold text-zinc-100">
+                              {buscarNomePessoa(associado.pessoa_id)}
+                            </p>
 
-                    <p className="text-sm text-zinc-400">
-                      Matrícula: {associado.matricula}
-                    </p>
-                  </>
-                )}
+                            <p className="mt-0.5 text-xs text-zinc-500">
+                              Pessoa vinculada como associado
+                            </p>
+                          </div>
+                        )}
+                      </td>
 
-                <p className="text-sm text-zinc-500 mt-1">
-                  Status: {associado.ativo ? "Ativo" : "Inativo"}
-                </p>
-              </div>
+                      <td className="px-5 py-3 align-middle">
+                        {estaEditando ? (
+                          <input
+                            type="text"
+                            value={matriculaEdicao}
+                            onChange={(e) =>
+                              setMatriculaEdicao(e.target.value)
+                            }
+                            className="
+                              h-10 w-full rounded-lg border border-zinc-700
+                              bg-zinc-950 px-3 text-sm text-zinc-100
+                              outline-none transition
+                              focus:border-blue-500/60
+                              focus:ring-2 focus:ring-blue-500/20
+                            "
+                          />
+                        ) : (
+                          <p className="text-zinc-300">
+                            {associado.matricula}
+                          </p>
+                        )}
+                      </td>
 
-              <div className="flex flex-wrap items-center gap-2">
-                {editandoId === associado.id ? (
-                  <>
-                    <button
-                      onClick={() => salvarEdicaoAssociado(associado.id!)}
-                      className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-bold"
-                    >
-                      Salvar
-                    </button>
+                      <td className="px-5 py-3 align-middle">
+                        <span
+                          className={`
+                            inline-flex items-center rounded-full border px-2.5 py-1
+                            text-xs font-semibold
+                            ${
+                              associado.ativo
+                                ? "border-green-500/30 bg-green-500/10 text-green-300"
+                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            }
+                          `}
+                        >
+                          {associado.ativo ? "Ativo" : "Inativo"}
+                        </span>
+                      </td>
+                          
+                      {podeGerenciar && (
+                        <td className="px-5 py-3 align-middle">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {estaEditando ? (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    salvarEdicaoAssociado(associado.id!)
+                                  }
+                                  className="
+                                    rounded-lg border border-blue-500/40
+                                    bg-blue-600 px-3 py-2 text-xs font-semibold text-white
+                                    transition hover:bg-blue-500
+                                  "
+                                >
+                                  Salvar
+                                </button>
 
-                    <button
-                      onClick={cancelarEdicao}
-                      className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg text-sm font-bold"
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => iniciarEdicao(associado)}
-                      className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg text-sm font-bold"
-                    >
-                      Editar
-                    </button>
+                                <button
+                                  onClick={cancelarEdicao}
+                                  className="
+                                    rounded-lg border border-zinc-700
+                                    bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
+                                    transition hover:bg-zinc-700
+                                  "
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => iniciarEdicao(associado)}
+                                  className="
+                                    rounded-lg border border-zinc-700
+                                    bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
+                                    transition hover:bg-zinc-700
+                                  "
+                                >
+                                  Editar
+                                </button>
 
-                    {associado.id && (
-                      <button
-                        onClick={() => alternarStatus(associado.id!, associado.ativo)}
-                        className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-lg text-sm font-bold"
-                      >
-                        {associado.ativo ? "Inativar" : "Reativar"}
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                                {associado.id && (
+                                  <button
+                                    onClick={() =>
+                                      alternarStatus(
+                                        associado.id!,
+                                        associado.ativo
+                                      )
+                                    }
+                                    className={`
+                                      rounded-lg border px-3 py-2 text-xs font-semibold transition
+                                      ${
+                                        associado.ativo
+                                          ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                          : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                      }
+                                    `}
+                                  >
+                                    {associado.ativo ? "Inativar" : "Reativar"}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  )           
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   )
 }
