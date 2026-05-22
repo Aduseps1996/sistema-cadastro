@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import {
   collection,
-  addDoc,
   onSnapshot,
   query,
   orderBy,
@@ -77,6 +77,7 @@ export default function UsuariosPage() {
   const [nomeEdicao, setNomeEdicao] = useState("")
   const [emailEdicao, setEmailEdicao] = useState("")
   const [perfilEdicao, setPerfilEdicao] = useState("")
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
   // =====================================================
   // CONSULTA EM TEMPO REAL
@@ -112,27 +113,27 @@ export default function UsuariosPage() {
   async function adicionarUsuario() {
 
     if (nome.trim() === "") {
-      alert("Informe o nome.")
+      toast.warning("Informe o nome.")
       return
     }
 
     if (email.trim() === "") {
-      alert("Informe o e-mail.")
+      toast.warning("Informe o e-mail.")
       return
     }
 
     if (senha.trim() === "") {
-      alert("Informe a senha.")
+      toast.warning("Informe a senha.")
       return
     }
 
     if (senha.length < 6) {
-      alert("A senha precisa ter pelo menos 6 caracteres.")
+      toast.warning("A senha precisa ter pelo menos 6 caracteres.")
       return
     }
 
     if (perfil === "") {
-      alert("Selecione o perfil.")
+      toast.warning("Selecione o perfil.")
       return
     }
 
@@ -148,43 +149,50 @@ export default function UsuariosPage() {
     )
 
     if (emailExiste) {
-      alert("Este e-mail já está cadastrado.")
+      toast.warning("Este e-mail já está cadastrado.")
       return
     }
 
     // =====================================================
     // CRIAÇÃO NO FIREBASE AUTH
     // =====================================================
-    const credencial =
-      await createUserWithEmailAndPassword(
-        secondaryAuth,
-        emailFormatado,
-        senha
-      )
+    try {
+      setAcaoEmAndamento("adicionar_usuario")
 
-    // =====================================================
-    // SALVA NO FIRESTORE
-    // =====================================================
-    await setDoc(doc(db, "usuarios", credencial.user.uid), {
-      uid: credencial.user.uid,
-      nome: nome.trim(),
-      email: emailFormatado,
-      perfil,
-      ativo: true,
-      criado_em: serverTimestamp(),
-      atualizado_em: serverTimestamp()
-    })
+      const credencial =
+        await createUserWithEmailAndPassword(
+          secondaryAuth,
+          emailFormatado,
+          senha
+        )
 
-    // Logout do auth secundário usado no cadastro.
-    await signOut(secondaryAuth)
+      await setDoc(doc(db, "usuarios", credencial.user.uid), {
+        uid: credencial.user.uid,
+        nome: nome.trim(),
+        email: emailFormatado,
+        perfil,
+        ativo: true,
+        criado_em: serverTimestamp(),
+        atualizado_em: serverTimestamp()
+      })
 
-    // Limpa formulário.
-    setNome("")
-    setEmail("")
-    setSenha("")
-    setPerfil("")
+      await signOut(secondaryAuth)
 
-    alert("Usuário cadastrado com sucesso.")
+      setNome("")
+      setEmail("")
+      setSenha("")
+      setPerfil("")
+
+      toast.success("Usuário cadastrado com sucesso.")
+
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao cadastrar usuário.")
+
+    } finally {
+      setAcaoEmAndamento("")
+    }
+
   }
 
   // =====================================================
@@ -193,17 +201,17 @@ export default function UsuariosPage() {
   async function salvarEdicaoUsuario(id: string) {
 
     if (nomeEdicao.trim() === "") {
-      alert("Informe o nome.")
+      toast.warning("Informe o nome.")
       return
     }
 
     if (emailEdicao.trim() === "") {
-      alert("Informe o e-mail.")
+      toast.warning("Informe o e-mail.")
       return
     }
 
     if (perfilEdicao === "") {
-      alert("Selecione o perfil.")
+      toast.warning("Selecione o perfil.")
       return
     }
 
@@ -220,48 +228,79 @@ export default function UsuariosPage() {
     )
 
     if (emailExiste) {
-      alert("Este e-mail já está cadastrado.")
+      toast.warning("Este e-mail já está cadastrado.")
       return
     }
 
-    await updateDoc(doc(db, "usuarios", id), {
-      nome: nomeEdicao.trim(),
-      email: emailFormatado,
-      perfil: perfilEdicao,
-      atualizado_em: serverTimestamp()
-    })
+    try {
+      setAcaoEmAndamento(`salvar_${id}`)
 
-    cancelarEdicao()
+      await updateDoc(doc(db, "usuarios", id), {
+        nome: nomeEdicao.trim(),
+        email: emailFormatado,
+        perfil: perfilEdicao,
+        atualizado_em: serverTimestamp()
+      })
+
+      toast.success("Usuário atualizado.")
+
+      cancelarEdicao()
+
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao salvar alterações.")
+
+    } finally {
+      setAcaoEmAndamento("")
+    }
+
   }
 
   // =====================================================
   // INATIVAR / REATIVAR
   // =====================================================
-  async function alternarStatus(
-    id: string,
-    ativoAtual: boolean
-  ) {
+  async function alternarStatus(id: string, ativoAtual: boolean) {
+    if (acaoEmAndamento) return
 
-    await updateDoc(doc(db, "usuarios", id), {
-      ativo: !ativoAtual,
-      atualizado_em: serverTimestamp()
-    })
+    try {
+      setAcaoEmAndamento(`status_${id}`)
+
+      await updateDoc(doc(db, "usuarios", id), {
+        ativo: !ativoAtual,
+        atualizado_em: serverTimestamp()
+      })
+
+      toast.success(
+        ativoAtual
+          ? "Usuário inativado."
+          : "Usuário reativado."
+      )
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao alterar status do usuário.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
-
   // =====================================================
   // REDEFINIR SENHA
   // =====================================================
   // Envia e-mail de redefinição para o usuário.
-  async function enviarRedefinicaoSenha(
-    emailUsuario: string
-  ) {
+  async function enviarRedefinicaoSenha(emailUsuario: string) {
+    if (acaoEmAndamento) return
 
-    await sendPasswordResetEmail(
-      auth,
-      emailUsuario
-    )
+    try {
+      setAcaoEmAndamento(`senha_${emailUsuario}`)
 
-    alert("E-mail de redefinição enviado.")
+      await sendPasswordResetEmail(auth, emailUsuario)
+
+      toast.success("E-mail de redefinição enviado.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao enviar redefinição de senha.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
 
   // =====================================================
@@ -648,10 +687,9 @@ export default function UsuariosPage() {
                           className={`
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
-                            ${
-                              usuario.ativo
-                                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            ${usuario.ativo
+                              ? "border-green-500/30 bg-green-500/10 text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
                             }
                           `}
                         >
@@ -716,18 +754,12 @@ export default function UsuariosPage() {
 
                               {/* REDEFINIR SENHA */}
                               <button
-                                onClick={() =>
-                                  enviarRedefinicaoSenha(
-                                    usuario.email
-                                  )
-                                }
-                                className="
-                                  rounded-lg border border-yellow-500/30
-                                  bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-300
-                                  transition hover:bg-yellow-500/20
-                                "
+                                onClick={() => enviarRedefinicaoSenha(usuario.email)}
+                                disabled={acaoEmAndamento === `senha_${usuario.email}`}
                               >
-                                Redefinir senha
+                                {acaoEmAndamento === `senha_${usuario.email}`
+                                  ? "Enviando..."
+                                  : "Redefinir senha"}
                               </button>
 
                               {/* STATUS */}
@@ -741,10 +773,9 @@ export default function UsuariosPage() {
                                   }
                                   className={`
                                     rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    ${
-                                      usuario.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                        : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                    ${usuario.ativo
+                                      ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                      : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
                                     }
                                   `}
                                 >

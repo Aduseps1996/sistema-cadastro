@@ -500,10 +500,9 @@ export default function ProfissionaisPage() {
                           className={`
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
-                            ${
-                              profissional.ativo
-                                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            ${profissional.ativo
+                              ? "border-green-500/30 bg-green-500/10 text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
                             }
                           `}
                         >
@@ -562,10 +561,9 @@ export default function ProfissionaisPage() {
                                   }
                                   className={`
                                     rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    ${
-                                      profissional.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                        : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                    ${profissional.ativo
+                                      ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                      : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
                                     }
                                   `}
                                 >

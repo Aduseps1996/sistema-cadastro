@@ -3,11 +3,28 @@
 import { useState } from "react"
 import { toast, Toaster } from "sonner"
 
-import { signInWithEmailAndPassword } from "firebase/auth"
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut
+} from "firebase/auth"
 
-import { auth } from "../../lib/firebase"
+import {
+  doc,
+  getDoc
+} from "firebase/firestore"
+
+import {
+  auth,
+  db
+} from "../../lib/firebase"
 
 import { useRouter } from "next/navigation"
+
+import {
+  Eye,
+  EyeOff
+} from "lucide-react"
 
 export default function LoginPage() {
 
@@ -16,6 +33,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [carregando, setCarregando] = useState(false)
+
+  // =====================================================
+  // CONTROLE DE VISIBILIDADE DA SENHA
+  // =====================================================
+  const [mostrarSenha, setMostrarSenha] = useState(false)
 
   async function fazerLogin() {
 
@@ -29,21 +51,76 @@ export default function LoginPage() {
       return
     }
 
-    try {
-      setCarregando(true)
+     try {
+        setCarregando(true)
 
-      await signInWithEmailAndPassword(
+        const credencial = await signInWithEmailAndPassword(
+          auth,
+          email.trim().toLowerCase(),
+          senha
+        )
+
+        const usuarioRef = doc(
+          db,
+          "usuarios",
+          credencial.user.uid
+        )
+
+        const usuarioSnap = await getDoc(usuarioRef)
+
+        if (!usuarioSnap.exists()) {
+          await signOut(auth)
+          toast.error("Usuário sem permissão no sistema.")
+          return
+        }
+
+        const dadosUsuario = usuarioSnap.data()
+
+        if (!dadosUsuario.ativo) {
+          await signOut(auth)
+          toast.warning("Usuário inativo. Procure o administrador.")
+          return
+        }
+
+        router.replace("/sistema/inicio")
+
+      } catch (error) {
+        console.error(error)
+        toast.error("E-mail ou senha inválidos.")
+
+      } finally {
+        setCarregando(false)
+      }
+    }
+
+  // =====================================================
+  // REDEFINIÇÃO DE SENHA
+  // =====================================================
+  async function redefinirSenha() {
+
+    if (email.trim() === "") {
+      toast.warning("Informe o e-mail para redefinir a senha.")
+      return
+    }
+
+    try {
+
+      await sendPasswordResetEmail(
         auth,
-        email.trim().toLowerCase(),
-        senha
+        email.trim().toLowerCase()
       )
 
-      router.replace("/sistema/inicio")
+      toast.success(
+        "E-mail de redefinição enviado."
+      )
 
     } catch (error) {
-      toast.error("E-mail ou senha inválidos.")
-    } finally {
-      setCarregando(false)
+
+      console.error(error)
+
+      toast.error(
+        "Não foi possível enviar o e-mail."
+      )
     }
   }
 
@@ -89,20 +166,49 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <input
-            className="
-              h-11 w-full rounded-xl border border-zinc-700
-              bg-zinc-800 px-4 text-sm text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
-            type="password"
-            placeholder="Senha"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-          />
+          {/* =====================================================
+              CAMPO SENHA
+              ===================================================== */}
+          <div className="relative">
+
+            <input
+              className="
+                h-11 w-full rounded-xl border border-zinc-700
+                bg-zinc-800 px-4 pr-12 text-sm text-zinc-100
+                outline-none transition
+                placeholder:text-zinc-500
+                focus:border-blue-500/60
+                focus:ring-2 focus:ring-blue-500/20
+              "
+              type={mostrarSenha ? "text" : "password"}
+              placeholder="Senha"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+            />
+
+            {/* =====================================================
+                BOTÃO MOSTRAR SENHA
+                ===================================================== */}
+            <button
+              type="button"
+              onClick={() =>
+                setMostrarSenha(!mostrarSenha)
+              }
+              className="
+                absolute right-3 top-1/2
+                -translate-y-1/2
+                text-zinc-400 transition
+                hover:text-zinc-200
+              "
+            >
+              {mostrarSenha ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
+
+          </div>
 
           <button
             type="submit"
@@ -116,6 +222,20 @@ export default function LoginPage() {
             "
           >
             {carregando ? "Entrando..." : "Entrar"}
+          </button>
+
+          {/* =====================================================
+              LINK REDEFINIR SENHA
+              ===================================================== */}
+          <button
+            type="button"
+            onClick={redefinirSenha}
+            className="
+              w-full text-center text-sm text-zinc-400
+              transition hover:text-zinc-200
+            "
+          >
+            Esqueci minha senha
           </button>
 
         </form>

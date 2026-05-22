@@ -59,7 +59,7 @@ export default function AssociadosPage() {
   // =====================================================
   // CONTROLE DE PROCESSAMENTO DAS AÇÕES
   // =====================================================
-  const [acaoEmAndamento, setAcaoEmAndamento] = useState("")  
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
   // =====================================================
   // ESTADOS DA EDIÇÃO INLINE
@@ -78,8 +78,8 @@ export default function AssociadosPage() {
   // - inativar
   // - reativar
   const podeGerenciar =
-  usuarioSistema?.perfil === "Administrador" ||
-  usuarioSistema?.perfil === "Recepção"
+    usuarioSistema?.perfil === "Administrador" ||
+    usuarioSistema?.perfil === "Recepção"
 
 
 
@@ -199,6 +199,13 @@ export default function AssociadosPage() {
   // =====================================================
 
   async function salvarEdicaoAssociado(id: string) {
+    if (!podeGerenciar) {
+      toast.warning("Você não tem permissão para editar associados.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
     if (pessoaIdEdicao === "") {
       toast.warning("Selecione a pessoa.")
       return
@@ -229,14 +236,23 @@ export default function AssociadosPage() {
       return
     }
 
-    await updateDoc(doc(db, "associados", id), {
-      pessoa_id: pessoaIdEdicao,
-      matricula: matriculaFormatada,
-      atualizado_em: serverTimestamp()
-    })
+    try {
+      setAcaoEmAndamento(`salvar_${id}`)
 
-    toast.success("Associado atualizado.")
-    cancelarEdicao()
+      await updateDoc(doc(db, "associados", id), {
+        pessoa_id: pessoaIdEdicao,
+        matricula: matriculaFormatada,
+        atualizado_em: serverTimestamp()
+      })
+
+      toast.success("Associado atualizado.")
+      cancelarEdicao()
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao atualizar associado.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
 
   // =====================================================
@@ -601,17 +617,16 @@ export default function AssociadosPage() {
                           className={`
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
-                            ${
-                              associado.ativo
-                                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            ${associado.ativo
+                              ? "border-green-500/30 bg-green-500/10 text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
                             }
                           `}
                         >
                           {associado.ativo ? "Ativo" : "Inativo"}
                         </span>
                       </td>
-                          
+
                       {podeGerenciar && (
                         <td className="px-5 py-3 align-middle">
                           <div className="flex flex-wrap justify-end gap-2">
@@ -664,10 +679,9 @@ export default function AssociadosPage() {
                                     }
                                     className={`
                                       rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                      ${
-                                        associado.ativo
-                                          ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                          : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                      ${associado.ativo
+                                        ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                        : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
                                       }
                                     `}
                                   >
@@ -680,7 +694,7 @@ export default function AssociadosPage() {
                         </td>
                       )}
                     </tr>
-                  )           
+                  )
                 })}
               </tbody>
             </table>

@@ -254,7 +254,7 @@ export default function CargosPage() {
 
       setAcaoEmAndamento("")
     }
-}
+  }
 
   // =====================================================
   // INICIAR EDIÇÃO INLINE
@@ -489,10 +489,9 @@ export default function CargosPage() {
                           className={`
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
-                            ${
-                              cargo.ativo
-                                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            ${cargo.ativo
+                              ? "border-green-500/30 bg-green-500/10 text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
                             }
                           `}
                         >
@@ -556,10 +555,9 @@ export default function CargosPage() {
                                   className={`
                                     rounded-lg border px-3 py-2 text-xs font-semibold transition
                                     disabled:cursor-not-allowed disabled:opacity-50
-                                    ${
-                                      cargo.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                        : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                    ${cargo.ativo
+                                      ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                      : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
                                     }
                                   `}
                                 >

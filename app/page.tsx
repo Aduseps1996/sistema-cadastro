@@ -1,27 +1,9 @@
-"use client"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { redirect } from "next/navigation"
 
 // =====================================================
-// PÁGINA INICIAL DO SISTEMA
+// ROTA RAIZ DO PROJETO
 // =====================================================
-// Essa é a rota raiz do projeto: "/".
-//
-// Como o sistema deve começar pelo login,
-// essa página apenas redireciona o usuário para "/login".
+// Quando acessar "/", manda direto para o login.
 export default function HomePage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    router.replace("/login")
-  }, [router])
-
-  return (
-    <main className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
-      <p className="text-sm text-zinc-400">
-        Redirecionando para o login...
-      </p>
-    </main>
-  )
+  redirect("/login")
 }

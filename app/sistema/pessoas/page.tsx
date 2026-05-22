@@ -531,23 +531,22 @@ export default function PessoasPage() {
                           className={`
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
-                            ${
-                              pessoa.ativo
-                                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                                : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                            ${pessoa.ativo
+                              ? "border-green-500/30 bg-green-500/10 text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
                             }
                           `}
                         >
                           {pessoa.ativo ? "Ativo" : "Inativo"}
                         </span>
                       </td>
-                      
-                    {podeGerenciar && (
-                      <td className="px-5 py-3 align-middle">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          {estaEditando ? (
-                            <>
-                              <button
+
+                      {podeGerenciar && (
+                        <td className="px-5 py-3 align-middle">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {estaEditando ? (
+                              <>
+                                <button
                                   onClick={() => salvarEdicaoPessoa(pessoa.id!)}
                                   disabled={acaoEmAndamento === `salvar_${pessoa.id}`}
                                   className="
@@ -562,58 +561,57 @@ export default function PessoasPage() {
                                     : "Salvar"}
                                 </button>
 
-                              <button
-                                onClick={cancelarEdicao}
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
-                              >
-                                Cancelar
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => iniciarEdicao(pessoa)}
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
-                              >
-                                Editar
-                              </button>
-
-                              {pessoa.id && (
                                 <button
-                                  onClick={() => alternarStatus(pessoa.id!, pessoa.ativo)}
-                                  disabled={acaoEmAndamento === `status_${pessoa.id}`}
-                                  className={`
+                                  onClick={cancelarEdicao}
+                                  className="
+                                  rounded-lg border border-zinc-700
+                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
+                                  transition hover:bg-zinc-700
+                                "
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => iniciarEdicao(pessoa)}
+                                  className="
+                                  rounded-lg border border-zinc-700
+                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
+                                  transition hover:bg-zinc-700
+                                "
+                                >
+                                  Editar
+                                </button>
+
+                                {pessoa.id && (
+                                  <button
+                                    onClick={() => alternarStatus(pessoa.id!, pessoa.ativo)}
+                                    disabled={acaoEmAndamento === `status_${pessoa.id}`}
+                                    className={`
                                     rounded-lg border px-3 py-2 text-xs font-semibold transition
                                     disabled:cursor-not-allowed disabled:opacity-50
-                                    ${
-                                      pessoa.ativo
+                                    ${pessoa.ativo
                                         ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                                         : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
-                                    }
+                                      }
                                   `}
-                                >
-                                  {acaoEmAndamento === `status_${pessoa.id}`
-                                    ? "Aguarde..."
-                                    : pessoa.ativo
-                                      ? "Inativar"
-                                      : "Reativar"}
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                )
+                                  >
+                                    {acaoEmAndamento === `status_${pessoa.id}`
+                                      ? "Aguarde..."
+                                      : pessoa.ativo
+                                        ? "Inativar"
+                                        : "Reativar"}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  )
                 })}
               </tbody>
             </table>

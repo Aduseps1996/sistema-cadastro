@@ -102,7 +102,7 @@ export default function AtendimentosPage() {
   // ESTADOS DO FORMULÁRIO DE NOVO ATENDIMENTO
   // =====================================================
 
-    const { usuarioSistema } = useUsuario()
+  const { usuarioSistema } = useUsuario()
 
   // =====================================================
   // CONTROLE DE PERMISSÃO
@@ -135,12 +135,12 @@ export default function AtendimentosPage() {
   const [profissionalPreferencialId, setProfissionalPreferencialId] = useState("")
   const [observacao, setObservacao] = useState("")
 
-// =====================================================
-// ESTADO DE PROCESSAMENTO DAS AÇÕES
-// =====================================================
-// Guarda qual ação está em andamento.
-// Evita clique duplo e dá feedback visual ao usuário.
-const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
+  // =====================================================
+  // ESTADO DE PROCESSAMENTO DAS AÇÕES
+  // =====================================================
+  // Guarda qual ação está em andamento.
+  // Evita clique duplo e dá feedback visual ao usuário.
+  const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
   // =====================================================
   // ESTADOS OPERACIONAIS DA FILA
@@ -163,7 +163,7 @@ const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
     useState("")
 
   const [motivoCancelamento, setMotivoCancelamento] =
-  useState("")
+    useState("")
 
   // =====================================================
   // LISTAS VINDAS DO FIRESTORE
@@ -411,23 +411,38 @@ const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
   // =====================================================
 
   async function obterOuCriarPessoa(nome: string) {
+
     const nomeFormatado = formatarNome(nome)
-    const pessoaExistente = buscarPessoaPorNome(nomeFormatado)
+
+    const pessoaExistente =
+      buscarPessoaPorNome(nomeFormatado)
 
     if (pessoaExistente?.id) {
       return pessoaExistente.id
     }
 
-    const novaPessoa = await addDoc(collection(db, "pessoas"), {
-      nome: nomeFormatado,
-      ativo: true,
-      criado_por: usuarioLogado,
-      criado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado,
-      atualizado_em: serverTimestamp()
-    })
+    try {
 
-    return novaPessoa.id
+      const novaPessoa = await addDoc(
+        collection(db, "pessoas"),
+        {
+          nome: nomeFormatado,
+          ativo: true,
+          criado_por: usuarioLogado,
+          criado_em: serverTimestamp(),
+          atualizado_por: usuarioLogado,
+          atualizado_em: serverTimestamp()
+        }
+      )
+
+      return novaPessoa.id
+
+    } catch (error) {
+
+      console.error(error)
+
+      throw error
+    }
   }
 
   // =====================================================
@@ -438,25 +453,40 @@ const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
     pessoa_id: string,
     matriculaInformada: string
   ) {
-    const associadoExistente =
-      buscarAssociadoPorMatricula(matriculaInformada)
 
-    if (associadoExistente?.id) {
-      return associadoExistente.id
+    try {
+
+      const associadoExistente =
+        buscarAssociadoPorMatricula(
+          matriculaInformada
+        )
+
+      if (associadoExistente?.id) {
+        return associadoExistente.id
+      }
+
+      const novoAssociado = await addDoc(
+        collection(db, "associados"),
+        {
+          pessoa_id,
+          matricula: matriculaInformada.trim(),
+          ativo: true,
+          data_associacao: serverTimestamp(),
+          criado_por: usuarioLogado,
+          criado_em: serverTimestamp(),
+          atualizado_por: usuarioLogado,
+          atualizado_em: serverTimestamp()
+        }
+      )
+
+      return novoAssociado.id
+
+    } catch (error) {
+
+      console.error(error)
+
+      throw error
     }
-
-    const novoAssociado = await addDoc(collection(db, "associados"), {
-      pessoa_id,
-      matricula: matriculaInformada.trim(),
-      ativo: true,
-      data_associacao: serverTimestamp(),
-      criado_por: usuarioLogado,
-      criado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado,
-      atualizado_em: serverTimestamp()
-    })
-
-    return novoAssociado.id
   }
 
   // =====================================================
@@ -468,31 +498,39 @@ const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
     pessoa_id: string,
     tipo: string
   ) {
-    const representanteExistente = representantes.find(
-      (representante) =>
-        representante.associado_id === associado_id &&
-        representante.pessoa_id === pessoa_id
-    )
 
-    if (representanteExistente?.id) {
-      return representanteExistente.id
-    }
+    try {
+      const representanteExistente = representantes.find(
+        (representante) =>
+          representante.associado_id === associado_id &&
+          representante.pessoa_id === pessoa_id
+      )
 
-    const novoRepresentante = await addDoc(
-      collection(db, "associado_representantes"),
-      {
-        associado_id,
-        pessoa_id,
-        tipo,
-        ativo: true,
-        criado_por: usuarioLogado,
-        criado_em: serverTimestamp(),
-        atualizado_por: usuarioLogado,
-        atualizado_em: serverTimestamp()
+      if (representanteExistente?.id) {
+        return representanteExistente.id
       }
-    )
 
-    return novoRepresentante.id
+      const novoRepresentante = await addDoc(
+        collection(db, "associado_representantes"),
+        {
+          associado_id,
+          pessoa_id,
+          tipo,
+          ativo: true,
+          criado_por: usuarioLogado,
+          criado_em: serverTimestamp(),
+          atualizado_por: usuarioLogado,
+          atualizado_em: serverTimestamp()
+        }
+      )
+
+      return novoRepresentante.id
+
+    } catch (error) {
+      console.error(error)
+
+      throw error
+    }
   }
 
   // =====================================================
@@ -504,109 +542,118 @@ const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
     evento: string,
     observacaoHistorico = ""
   ) {
-    await addDoc(collection(db, "historico_atendimento"), {
-      atendimento_id: atendimentoId,
-      evento,
-      observacao: observacaoHistorico,
-      usuario_id: usuarioLogado,
-      criado_por: usuarioLogado,
-      criado_em: serverTimestamp()
-    })
+
+    try {
+
+      await addDoc(collection(db, "historico_atendimento"), {
+        atendimento_id: atendimentoId,
+        evento,
+        observacao: observacaoHistorico,
+        usuario_id: usuarioLogado,
+        criado_por: usuarioLogado,
+        criado_em: serverTimestamp()
+      })
+
+    } catch (error) {
+      console.error("Erro ao registrar histórico:", error)
+
+      throw error
+    }
   }
-    // =====================================================
+  // =====================================================
   // REGISTRAR CHEGADA
   // =====================================================
 
-async function registrarChegada() {
-  if (!podeRegistrarChegada) {
-    toast.error("Você não tem permissão para registrar chegada.")
-    return
-  }
-
-  if (acaoEmAndamento) return
-
-  if (nomePessoa.trim() === "") {
-    toast.warning("Informe o nome da pessoa.")
-    return
-  }
-
-  if (tipo === "associado" && matricula.trim() === "") {
-    toast.warning("Informe a matrícula do associado.")
-    return
-  }
-
-  if (tipo === "associado" && convenioId === "") {
-    toast.warning("Selecione o convênio do associado.")
-    return
-  }
-
-  try {
-    setAcaoEmAndamento("registrar_chegada")
-
-    const pessoaPrincipalId = await obterOuCriarPessoa(nomePessoa)
-
-    let associadoSelecionadoId: string | null = null
-    let representanteSelecionadoId: string | null = null
-    const convenioSelecionadoId: string | null = convenioId || null
-
-    if (tipo === "associado") {
-      associadoSelecionadoId = await obterOuCriarAssociado(
-        pessoaPrincipalId,
-        matricula
-      )
+  async function registrarChegada() {
+    if (!podeRegistrarChegada) {
+      toast.error("Você não tem permissão para registrar chegada.")
+      return
     }
 
-    if (usarRepresentante) {
-      const pessoaRepresentanteId =
-        await obterOuCriarPessoa(nomeRepresentante)
+    if (acaoEmAndamento) return
 
-      if (associadoSelecionadoId) {
-        representanteSelecionadoId = await obterOuCriarRepresentante(
-          associadoSelecionadoId,
-          pessoaRepresentanteId,
-          tipoRepresentante
+    if (nomePessoa.trim() === "") {
+      toast.warning("Informe o nome da pessoa.")
+      return
+    }
+
+    if (tipo === "associado" && matricula.trim() === "") {
+      toast.warning("Informe a matrícula do associado.")
+      return
+    }
+
+    if (tipo === "associado" && convenioId === "") {
+      toast.warning("Selecione o convênio do associado.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento("registrar_chegada")
+
+      const pessoaPrincipalId = await obterOuCriarPessoa(nomePessoa)
+
+      let associadoSelecionadoId: string | null = null
+      let representanteSelecionadoId: string | null = null
+      const convenioSelecionadoId: string | null = convenioId || null
+
+      if (tipo === "associado") {
+        associadoSelecionadoId = await obterOuCriarAssociado(
+          pessoaPrincipalId,
+          matricula
         )
       }
+
+      if (usarRepresentante) {
+        const pessoaRepresentanteId =
+          await obterOuCriarPessoa(nomeRepresentante)
+
+        if (associadoSelecionadoId) {
+          representanteSelecionadoId = await obterOuCriarRepresentante(
+            associadoSelecionadoId,
+            pessoaRepresentanteId,
+            tipoRepresentante
+          )
+        }
+      }
+
+      const novoAtendimento = await addDoc(collection(db, "atendimentos"), {
+        pessoa_id: pessoaPrincipalId,
+        associado_id: associadoSelecionadoId,
+        representante_id: representanteSelecionadoId,
+        profissional_id: null,
+        profissional_preferencial_id: profissionalPreferencialId || null,
+        convenio_id: convenioSelecionadoId,
+        tipo,
+        status: "aguardando",
+        observacao: observacao.trim(),
+        usuario_id: usuarioLogado,
+        criado_por: usuarioLogado,
+        criado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado,
+        atualizado_em: serverTimestamp(),
+        data_hora_chegada: serverTimestamp()
+      })
+
+      await registrarHistorico(novoAtendimento.id, "atendimento_criado")
+
+      setTipo("associado")
+      setNomePessoa("")
+      setMatricula("")
+      setConvenioId("")
+      setUsarRepresentante(false)
+      setNomeRepresentante("")
+      setTipoRepresentante("")
+      setProfissionalPreferencialId("")
+      setObservacao("")
+
+      toast.success("Chegada registrada.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao registrar chegada. Tente novamente.")
+    } finally {
+      setAcaoEmAndamento("")
     }
-
-    const novoAtendimento = await addDoc(collection(db, "atendimentos"), {
-      pessoa_id: pessoaPrincipalId,
-      associado_id: associadoSelecionadoId,
-      representante_id: representanteSelecionadoId,
-      profissional_id: null,
-      profissional_preferencial_id: profissionalPreferencialId || null,
-      convenio_id: convenioSelecionadoId,
-      tipo,
-      status: "aguardando",
-      observacao: observacao.trim(),
-      usuario_id: usuarioLogado,
-      criado_por: usuarioLogado,
-      criado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado,
-      atualizado_em: serverTimestamp(),
-      data_hora_chegada: serverTimestamp()
-    })
-
-    await registrarHistorico(novoAtendimento.id, "atendimento_criado")
-
-    setTipo("associado")
-    setNomePessoa("")
-    setMatricula("")
-    setConvenioId("")
-    setUsarRepresentante(false)
-    setNomeRepresentante("")
-    setTipoRepresentante("")
-    setProfissionalPreferencialId("")
-    setObservacao("")
-
-    toast.success("Chegada registrada.")
-  } catch (error) {
-    console.error(error)
-    toast.error("Erro ao registrar chegada. Tente novamente.")
-  } finally {
-    setAcaoEmAndamento("")
   }
-}
 
   // =====================================================
   // INICIAR ATENDIMENTO
@@ -699,53 +746,53 @@ async function registrarChegada() {
   // =====================================================
   // Essa função é chamada pelo modal de cancelamento.
   // Ela usa o motivo digitado no textarea do modal.
-async function confirmarCancelamentoAtendimento() {
-  if (!podeOperarAtendimento) {
-    toast.warning("Você não tem permissão para cancelar atendimento.")
-    return
+  async function confirmarCancelamentoAtendimento() {
+    if (!podeOperarAtendimento) {
+      toast.warning("Você não tem permissão para cancelar atendimento.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
+    if (!atendimentoCancelandoId) {
+      toast.error("Atendimento não identificado.")
+      return
+    }
+
+    if (motivoCancelamento.trim() === "") {
+      toast.warning("Informe o motivo do cancelamento.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`cancelar_${atendimentoCancelandoId}`)
+
+      await updateDoc(doc(db, "atendimentos", atendimentoCancelandoId), {
+        status: "cancelado",
+        motivo: motivoCancelamento.trim(),
+        fim_atendimento: serverTimestamp(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoCancelandoId,
+        "atendimento_cancelado",
+        motivoCancelamento.trim()
+      )
+
+      toast.success("Atendimento cancelado.")
+
+      setModalCancelamentoAberto(false)
+      setAtendimentoCancelandoId("")
+      setMotivoCancelamento("")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao cancelar atendimento.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
-
-  if (acaoEmAndamento) return
-
-  if (!atendimentoCancelandoId) {
-    toast.error("Atendimento não identificado.")
-    return
-  }
-
-  if (motivoCancelamento.trim() === "") {
-    toast.warning("Informe o motivo do cancelamento.")
-    return
-  }
-
-  try {
-    setAcaoEmAndamento(`cancelar_${atendimentoCancelandoId}`)
-
-    await updateDoc(doc(db, "atendimentos", atendimentoCancelandoId), {
-      status: "cancelado",
-      motivo: motivoCancelamento.trim(),
-      fim_atendimento: serverTimestamp(),
-      atualizado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado
-    })
-
-    await registrarHistorico(
-      atendimentoCancelandoId,
-      "atendimento_cancelado",
-      motivoCancelamento.trim()
-    )
-
-    toast.success("Atendimento cancelado.")
-
-    setModalCancelamentoAberto(false)
-    setAtendimentoCancelandoId("")
-    setMotivoCancelamento("")
-  } catch (error) {
-    console.error(error)
-    toast.error("Erro ao cancelar atendimento.")
-  } finally {
-    setAcaoEmAndamento("")
-  }
-}
 
   // =====================================================
   // CÁLCULO DE TEMPO DE ESPERA
@@ -1125,11 +1172,10 @@ async function confirmarCancelamentoAtendimento() {
               <button
                 key={status}
                 onClick={() => setFiltroStatus(status)}
-                className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                  filtroStatus === status
+                className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${filtroStatus === status
                     ? "bg-blue-600 text-white"
                     : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                }`}
+                  }`}
               >
                 {status === "todos"
                   ? "Ativos"
@@ -1216,27 +1262,27 @@ async function confirmarCancelamentoAtendimento() {
                     {(pessoaRepresentante ||
                       profissionalPreferencial ||
                       atendimento.observacao) && (
-                      <div className="mt-2 space-y-1 text-sm text-zinc-400">
-                        {pessoaRepresentante && representante && (
-                          <p>
-                            Representante: {pessoaRepresentante.nome} (
-                            {representante.tipo})
-                          </p>
-                        )}
+                        <div className="mt-2 space-y-1 text-sm text-zinc-400">
+                          {pessoaRepresentante && representante && (
+                            <p>
+                              Representante: {pessoaRepresentante.nome} (
+                              {representante.tipo})
+                            </p>
+                          )}
 
-                        {profissionalPreferencial && (
-                          <p>
-                            Preferência: {profissionalPreferencial.nome}
-                          </p>
-                        )}
+                          {profissionalPreferencial && (
+                            <p>
+                              Preferência: {profissionalPreferencial.nome}
+                            </p>
+                          )}
 
-                        {atendimento.observacao && (
-                          <p className="text-zinc-300">
-                            Obs: {atendimento.observacao}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                          {atendimento.observacao && (
+                            <p className="text-zinc-300">
+                              Obs: {atendimento.observacao}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                     <div className="mt-2 text-xs text-zinc-500">
                       {atendimento.data_hora_chegada && (
@@ -1314,10 +1360,10 @@ async function confirmarCancelamentoAtendimento() {
                                   {profissionaisEncontradosPorAtendimento(
                                     atendimento.id
                                   ).length === 0 && (
-                                    <p className="px-4 py-3 text-sm text-zinc-400">
-                                      Nenhum profissional encontrado.
-                                    </p>
-                                  )}
+                                      <p className="px-4 py-3 text-sm text-zinc-400">
+                                        Nenhum profissional encontrado.
+                                      </p>
+                                    )}
 
                                   {profissionaisEncontradosPorAtendimento(
                                     atendimento.id
@@ -1365,29 +1411,29 @@ async function confirmarCancelamentoAtendimento() {
                               ? "Iniciando..."
                               : "Iniciar"}
                           </button>
-                        
+
                         </>
                       )}
 
-                      {podeOperarAtendimento &&
-                        atendimento.status === "em_atendimento" &&
-                          atendimento.id && (
-                            <button
-                              onClick={() => finalizarAtendimento(atendimento.id!)}
-                              disabled={acaoEmAndamento === `finalizar_${atendimento.id}`}
-                              className="
+                    {podeOperarAtendimento &&
+                      atendimento.status === "em_atendimento" &&
+                      atendimento.id && (
+                        <button
+                          onClick={() => finalizarAtendimento(atendimento.id!)}
+                          disabled={acaoEmAndamento === `finalizar_${atendimento.id}`}
+                          className="
                                 h-10 rounded-lg border border-emerald-500/30
                                 bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-300
                                 transition hover:bg-emerald-500/20
                                 disabled:cursor-not-allowed disabled:opacity-50
                               "
-                            >
-                              {acaoEmAndamento === `finalizar_${atendimento.id}`
-                                ? "Finalizando..."
-                                : "Finalizar"}
-                            </button>
+                        >
+                          {acaoEmAndamento === `finalizar_${atendimento.id}`
+                            ? "Finalizando..."
+                            : "Finalizar"}
+                        </button>
                       )}
-                    
+
                     {podeOperarAtendimento &&
                       atendimento.status !== "finalizado" &&
                       atendimento.status !== "cancelado" &&
@@ -1422,24 +1468,24 @@ async function confirmarCancelamentoAtendimento() {
       {/* =====================================================
     MODAL DE CANCELAMENTO
     ===================================================== */}
-    {modalCancelamentoAberto && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      {modalCancelamentoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
 
-        <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
 
-          <h2 className="text-lg font-semibold text-zinc-100">
-            Cancelar atendimento
-          </h2>
+            <h2 className="text-lg font-semibold text-zinc-100">
+              Cancelar atendimento
+            </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
-            Informe o motivo do cancelamento para registrar no histórico.
-          </p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Informe o motivo do cancelamento para registrar no histórico.
+            </p>
 
-          <textarea
-            value={motivoCancelamento}
-            onChange={(e) => setMotivoCancelamento(e.target.value)}
-            placeholder="Digite o motivo do cancelamento"
-            className="
+            <textarea
+              value={motivoCancelamento}
+              onChange={(e) => setMotivoCancelamento(e.target.value)}
+              placeholder="Digite o motivo do cancelamento"
+              className="
               mt-4 min-h-[120px] w-full resize-none rounded-xl
               border border-zinc-700 bg-zinc-950 px-4 py-3
               text-sm text-zinc-100 outline-none transition
@@ -1447,50 +1493,50 @@ async function confirmarCancelamentoAtendimento() {
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
-          />
+            />
 
-          <div className="mt-5 flex justify-end gap-3">
+            <div className="mt-5 flex justify-end gap-3">
 
-            <button
-              type="button"
-              onClick={() => {
-                setModalCancelamentoAberto(false)
-                setAtendimentoCancelandoId("")
-                setMotivoCancelamento("")
-              }}
-              disabled={acaoEmAndamento.startsWith("cancelar_")}
-              className="
+              <button
+                type="button"
+                onClick={() => {
+                  setModalCancelamentoAberto(false)
+                  setAtendimentoCancelandoId("")
+                  setMotivoCancelamento("")
+                }}
+                disabled={acaoEmAndamento.startsWith("cancelar_")}
+                className="
                 h-10 rounded-lg border border-zinc-700
                 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100
                 transition hover:bg-zinc-700
                 disabled:cursor-not-allowed disabled:opacity-50
               "
-            >
-              Voltar
-            </button>
+              >
+                Voltar
+              </button>
 
-            <button
-              type="button"
-              onClick={confirmarCancelamentoAtendimento}
-              disabled={acaoEmAndamento.startsWith("cancelar_")}
-              className="
+              <button
+                type="button"
+                onClick={confirmarCancelamentoAtendimento}
+                disabled={acaoEmAndamento.startsWith("cancelar_")}
+                className="
                 h-10 rounded-lg border border-red-500/30
                 bg-red-500/10 px-4 text-sm font-semibold text-red-300
                 transition hover:bg-red-500/20
                 disabled:cursor-not-allowed disabled:opacity-50
               "
-            >
-              {acaoEmAndamento.startsWith("cancelar_")
-                ? "Cancelando..."
-                : "Confirmar cancelamento"}
-            </button>
+              >
+                {acaoEmAndamento.startsWith("cancelar_")
+                  ? "Cancelando..."
+                  : "Confirmar cancelamento"}
+              </button>
+
+            </div>
 
           </div>
 
         </div>
-
-      </div>
-    )}
+      )}
     </div>
   )
 }

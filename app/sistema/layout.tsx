@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { Toaster } from "sonner"
+import { toast, Toaster } from "sonner"
 
 import {
   onAuthStateChanged,
@@ -128,6 +128,22 @@ export default function SistemaLayout({
   const [usuarioSistema, setUsuarioSistema] =
     useState<UsuarioSistema | null>(null)
 
+
+  // =====================================================
+  // RELOAD AUTOMÁTICO SE FICAR PRESO NO CARREGAMENTO
+  // =====================================================
+  // Se o sistema ficar preso em "Carregando sistema...",
+  // força recarregamento automático após alguns segundos.
+  useEffect(() => {
+    if (!carregando) return
+
+    const tempo = setTimeout(() => {
+      window.location.reload()
+    }, 3000)
+
+    return () => clearTimeout(tempo)
+  }, [carregando])
+
   // =====================================================
   // AUTENTICAÇÃO E AUTORIZAÇÃO
   // =====================================================
@@ -156,12 +172,13 @@ export default function SistemaLayout({
         // ---------------------------------------------
         // BUSCA DO USUÁRIO NA COLEÇÃO "usuarios"
         // ---------------------------------------------
-        const usuarioRef = doc(db, "usuarios", usuario.uid)
+        try {
+          const usuarioRef = doc(db, "usuarios", usuario.uid)
 
           const usuarioSnap = await getDoc(usuarioRef)
 
           if (!usuarioSnap.exists()) {
-            alert("Usuário sem permissão no sistema.")
+            toast.warning("Usuário sem permissão no sistema.")
 
             await signOut(auth)
 
@@ -171,43 +188,67 @@ export default function SistemaLayout({
 
           const dadosUsuario =
             usuarioSnap.data() as UsuarioSistema
-        // ---------------------------------------------
-        // USUÁRIO INATIVO
-        // ---------------------------------------------
-        if (!dadosUsuario.ativo) {
-          alert("Usuário inativo.")
+
+          if (!dadosUsuario.ativo) {
+            toast.warning("Usuário inativo.")
+
+            await signOut(auth)
+
+            router.replace("/login")
+            return
+          }
+
+          setUsuarioSistema(dadosUsuario)
+
+          const permitido = podeAcessarPagina(
+            dadosUsuario.perfil,
+            pathname
+          )
+
+          if (!permitido) {
+            router.replace("/sistema/inicio")
+            return
+          }
+
+          setCarregando(false)
+
+        } catch (error) {
+          console.error(error)
+
+          toast.error("Erro ao validar acesso ao sistema.")
 
           await signOut(auth)
 
           router.replace("/login")
-          return
+
+          setCarregando(false)
         }
-
-        setUsuarioSistema(dadosUsuario)
-
-        // ---------------------------------------------
-        // PERMISSÃO POR ROTA
-        // ---------------------------------------------
-        const permitido = podeAcessarPagina(
-          dadosUsuario.perfil,
-          pathname
-        )
-
-        if (!permitido) {
-          router.replace("/sistema/inicio")
-          return
-        }
-
-        // ---------------------------------------------
-        // SISTEMA LIBERADO
-        // ---------------------------------------------
-        setCarregando(false)
       }
     )
 
     return () => unsubscribe()
 
-    }, [router, pathname])
+  }, [router, pathname])
+
+  // =====================================================
+  // CORREÇÃO DO HISTÓRICO DO NAVEGADOR
+  // =====================================================
+  // Alguns navegadores restauram a página pelo cache ao usar
+  // voltar/avançar, mantendo o estado antigo de "carregando".
+  // Quando isso acontecer, forçamos um reload da rota atual.
+  useEffect(() => {
+    function aoVoltarDoCache(event: PageTransitionEvent) {
+      if (event.persisted) {
+        window.location.reload()
+      }
+    }
+
+    window.addEventListener("pageshow", aoVoltarDoCache)
+
+    return () => {
+      window.removeEventListener("pageshow", aoVoltarDoCache)
+    }
+  }, [])
 
   // =====================================================
   // FUNÇÃO DE SAIR DO SISTEMA
@@ -299,7 +340,7 @@ export default function SistemaLayout({
     <UsuarioProvider usuarioSistema={usuarioSistema}>
       <main className="min-h-screen bg-zinc-950 text-white flex">
 
-      {/* =====================================================
+        {/* =====================================================
           SIDEBAR / MENU LATERAL ESQUERDO
           =====================================================
           w-72: largura fixa da lateral.
@@ -308,206 +349,223 @@ export default function SistemaLayout({
           bg-zinc-900: cor de fundo da navegação lateral.
           border-r: linha separando menu e conteúdo.
       */}
-      <aside className="w-72 h-screen sticky top-0 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+        <aside className="w-72 h-screen sticky top-0 bg-zinc-900 border-r border-zinc-800 flex flex-col">
 
-        {/* =====================================================
+          {/* =====================================================
             TOPO DA SIDEBAR / IDENTIDADE DO SISTEMA
             =====================================================
             Aqui fica a logo e o nome do sistema.
             É a área de identidade visual da aplicação.
         */}
-        <div className="px-5 py-5 border-b border-zinc-800">
-          <div className="flex items-center gap-3">
+          <div className="px-5 py-5 border-b border-zinc-800">
+            <div className="flex items-center gap-3">
 
-            {/* LOGO DO SISTEMA */}
-            <div className="relative w-12 h-12 overflow-hidden rounded-xl bg-white p-1 shadow-sm">
-              <Image
-                src="/logos/logo.png"
-                alt="Logo ADUSEPS"
-                fill
-                className="object-contain"
-                priority
-              />
+              {/* LOGO DO SISTEMA */}
+              <div className="relative w-12 h-12 overflow-hidden rounded-xl bg-white p-1 shadow-sm">
+                <Image
+                  src="/logos/logo.png"
+                  alt="Logo ADUSEPS"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+
+              {/* NOME E DESCRIÇÃO DO SISTEMA */}
+              <div className="min-w-0">
+                <h1 className="text-xl font-black tracking-tight leading-tight">
+                  ADUSEPS
+                </h1>
+
+                <p className="text-zinc-500 text-xs leading-tight">
+                  Sistema Administrativo
+                </p>
+              </div>
+
             </div>
-
-            {/* NOME E DESCRIÇÃO DO SISTEMA */}
-            <div className="min-w-0">
-              <h1 className="text-xl font-black tracking-tight leading-tight">
-                ADUSEPS
-              </h1>
-
-              <p className="text-zinc-500 text-xs leading-tight">
-                Sistema Administrativo
-              </p>
-            </div>
-
           </div>
-        </div>
 
-        {/* =====================================================
+          {/* =====================================================
             ÁREA CENTRAL DO MENU
             =====================================================
             flex-1: ocupa todo o espaço disponível.
             overflow-y-auto: permite rolagem se o menu crescer.
             p-4: espaçamento interno mais compacto e profissional.
         */}
-        <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4">
 
-          <nav className="space-y-6">
+            <nav className="space-y-6">
 
-            {gruposMenu.map((grupo) => {
-              const itensDoGrupo = itensVisiveis.filter(
-                (item) => item.grupo === grupo
-              )
+              {gruposMenu.map((grupo) => {
+                const itensDoGrupo = itensVisiveis.filter(
+                  (item) => item.grupo === grupo
+                )
 
-              if (itensDoGrupo.length === 0) {
-                return null
-              }
+                if (itensDoGrupo.length === 0) {
+                  return null
+                }
 
-              return (
-                // =====================================================
-                // GRUPO DO MENU
-                // =====================================================
-                // Exemplo: OPERACIONAL, CADASTROS, ADMINISTRAÇÃO.
-                // Isso melhora muito a leitura do sistema.
-                <div key={grupo}>
+                return (
+                  // =====================================================
+                  // GRUPO DO MENU
+                  // =====================================================
+                  // Exemplo: OPERACIONAL, CADASTROS, ADMINISTRAÇÃO.
+                  // Isso melhora muito a leitura do sistema.
+                  <div key={grupo}>
 
-                  {/* TÍTULO DO GRUPO */}
-                  <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-                    {grupo}
-                  </p>
+                    {/* TÍTULO DO GRUPO */}
+                    <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                      {grupo}
+                    </p>
 
-                  {/* LINKS DO GRUPO */}
-                  <div className="space-y-1">
-                    {itensDoGrupo.map((item) => {
-                      const ativo = pathname === item.href
+                    {/* LINKS DO GRUPO */}
+                    <div className="space-y-1">
+                      {itensDoGrupo.map((item) => {
+                        const ativo = pathname === item.href
 
-                      return (
-                        // =====================================================
-                        // ITEM DO MENU
-                        // =====================================================
-                        // Item ativo:
-                        // - fundo discreto;
-                        // - texto branco;
-                        // - barra lateral azul fina.
-                        // Item normal:
-                        // - texto cinza;
-                        // - hover suave.
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={`relative flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                            ativo
-                              ? "bg-zinc-800 text-white"
-                              : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
-                          }`}
-                        >
-                          {/* BARRA AZUL DO ITEM ATIVO */}
-                          {ativo && (
-                            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-500" />
-                          )}
+                        return (
+                          // =====================================================
+                          // ITEM DO MENU
+                          // =====================================================
+                          // Item ativo:
+                          // - fundo discreto;
+                          // - texto branco;
+                          // - barra lateral azul fina.
+                          // Item normal:
+                          // - texto cinza;
+                          // - hover suave.
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`relative flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${ativo
+                                ? "bg-zinc-800 text-white"
+                                : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
+                              }`}
+                          >
+                            {/* BARRA AZUL DO ITEM ATIVO */}
+                            {ativo && (
+                              <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-blue-500" />
+                            )}
 
-                          <span className="pl-2">
-                            {item.nome}
-                          </span>
-                        </Link>
-                      )
-                    })}
+                            <span className="pl-2">
+                              {item.nome}
+                            </span>
+                          </Link>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
 
-          </nav>
+            </nav>
 
-        </div>
+          </div>
 
-        {/* =====================================================
+          {/* =====================================================
             RODAPÉ DA SIDEBAR / USUÁRIO LOGADO
             =====================================================
             Aqui aparecem dados básicos do usuário e o botão sair.
             Essa área fica sempre no final da lateral.
         */}
-        <div className="p-4 border-t border-zinc-800">
+          <div className="p-4 border-t border-zinc-800">
 
-          {/* CARD DO USUÁRIO LOGADO */}
-          <div className="bg-zinc-950/60 border border-zinc-800 rounded-2xl p-4 mb-3">
+            {/* CARD DO USUÁRIO LOGADO */}
+            <div className="bg-zinc-950/60 border border-zinc-800 rounded-2xl p-4 mb-3">
 
-            <p className="text-xs font-medium text-zinc-500">
-              Usuário logado
-            </p>
+              <p className="text-xs font-medium text-zinc-500">
+                Usuário logado
+              </p>
 
-            <p className="mt-1 font-semibold text-sm text-zinc-100 truncate">
-              {usuarioSistema?.nome || usuarioEmail}
-            </p>
+              <p className="mt-1 font-semibold text-sm text-zinc-100 truncate">
+                {usuarioSistema?.nome || usuarioEmail}
+              </p>
 
-            <p className="text-xs text-zinc-500 mt-1">
-              {usuarioSistema?.perfil}
-            </p>
+              <p className="text-xs text-zinc-500 mt-1">
+                {usuarioSistema?.perfil}
+              </p>
+
+            </div>
+
+            {/* BOTÃO SAIR */}
+            <button
+              onClick={sair}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700"
+            >
+              Sair
+            </button>
 
           </div>
 
-          {/* BOTÃO SAIR */}
-          <button
-            onClick={sair}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700"
-          >
-            Sair
-          </button>
+        </aside>
 
-        </div>
-
-      </aside>
-
-      {/* =====================================================
+        {/* =====================================================
           ÁREA PRINCIPAL DO SISTEMA
           =====================================================
           Aqui fica tudo que muda de página para página.
           A sidebar é fixa; o conteúdo entra aqui via {children}.
       */}
-      <section className="flex-1 min-w-0 flex flex-col">
+        <section className="flex-1 min-w-0 flex flex-col">
 
-        {/* =====================================================
+          {/* =====================================================
             HEADER SUPERIOR
             =====================================================
             Esse cabeçalho dá mais cara de sistema corporativo.
             Depois podemos colocar busca global, notificações e usuário.
         */}
-        <header className="h-16 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur flex items-center justify-between px-8">
+          <header className="h-16 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur flex items-center justify-between px-8">
 
-          {/* INFORMAÇÃO DA PÁGINA ATUAL */}
-          <div>
-            <p className="text-sm font-semibold text-zinc-100">
-              Sistema Administrativo
-            </p>
+            {/* INFORMAÇÃO DA PÁGINA ATUAL */}
+            <div className="flex items-center gap-3">
 
-            <p className="text-xs text-zinc-500">
-              Controle interno da ADUSEPS
-            </p>
-          </div>
+              <div>
+                <p className="text-sm font-semibold text-zinc-100">
+                  Sistema Administrativo
+                </p>
 
-          {/* PERFIL RESUMIDO NO TOPO */}
-          <div className="hidden md:flex items-center gap-3 text-right">
-            <div>
-              <p className="text-sm font-semibold text-zinc-200">
-                {usuarioSistema?.nome || usuarioEmail}
-              </p>
+                <p className="text-xs text-zinc-500">
+                  Controle interno da ADUSEPS
+                </p>
+              </div>
 
-              <p className="text-xs text-zinc-500">
-                {usuarioSistema?.perfil}
-              </p>
+              {/* =====================================================
+                INDICADOR DE AMBIENTE DE TESTE
+                =====================================================
+                Esse aviso deixa claro para os usuários que o sistema
+                ainda está em fase de teste controlado.
+            */}
+              <span className="
+              rounded-full border border-amber-500/30
+              bg-amber-500/10 px-3 py-1
+              text-xs font-semibold text-amber-300
+            ">
+                Ambiente de Teste
+              </span>
+
             </div>
 
-            <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm font-bold text-zinc-300">
-              {(usuarioSistema?.nome || usuarioEmail || "U")
-                .charAt(0)
-                .toUpperCase()}
+            {/* PERFIL RESUMIDO NO TOPO */}
+            <div className="hidden md:flex items-center gap-3 text-right">
+              <div>
+                <p className="text-sm font-semibold text-zinc-200">
+                  {usuarioSistema?.nome || usuarioEmail}
+                </p>
+
+                <p className="text-xs text-zinc-500">
+                  {usuarioSistema?.perfil}
+                </p>
+              </div>
+
+              <div className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm font-bold text-zinc-300">
+                {(usuarioSistema?.nome || usuarioEmail || "U")
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
             </div>
-          </div>
 
-        </header>
+          </header>
 
-        {/* =====================================================
+          {/* =====================================================
             CONTEÚDO DAS PÁGINAS
             =====================================================
             bg-zinc-950: mantém o fundo escuro.
@@ -515,15 +573,15 @@ export default function SistemaLayout({
             overflow-auto: permite rolagem do conteúdo.
             max-w-[1600px]: evita que o conteúdo fique largo demais em telas grandes.
         */}
-        <div className="flex-1 overflow-auto bg-zinc-950 p-8">
-          <div className="mx-auto w-full max-w-[1600px]">
-            {children}
+          <div className="flex-1 overflow-auto bg-zinc-950 p-8">
+            <div className="mx-auto w-full max-w-[1600px]">
+              {children}
+            </div>
           </div>
-        </div>
 
-            </section>
+        </section>
 
-              {/* =====================================================
+        {/* =====================================================
                   TOAST GLOBAL DO SISTEMA
                   =====================================================
                   Responsável pelas notificações elegantes:
@@ -531,14 +589,14 @@ export default function SistemaLayout({
                   - erro
                   - aviso
               */}
-              <Toaster
-                richColors
-                position="top-right"
-                theme="dark"
-              />
+        <Toaster
+          richColors
+          position="top-right"
+          theme="dark"
+        />
 
-            </main>
+      </main>
 
-          </UsuarioProvider>
-        )
+    </UsuarioProvider>
+  )
 }
