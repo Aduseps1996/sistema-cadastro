@@ -16,6 +16,7 @@ import {
 
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
+import { formatarNome } from "../../utils/formatadores"
 
 // =====================================================
 // TIPO DO CARGO
@@ -147,7 +148,7 @@ export default function CargosPage() {
       setAcaoEmAndamento("adicionar_cargo")
 
       await addDoc(collection(db, "cargos"), {
-        nome: nome.trim(),
+        nome: formatarNome(nome),
         ativo: true,
         criado_em: serverTimestamp(),
         atualizado_em: serverTimestamp()
@@ -192,7 +193,7 @@ export default function CargosPage() {
       setAcaoEmAndamento(`salvar_${id}`)
 
       await updateDoc(doc(db, "cargos", id), {
-        nome: nomeEdicao.trim(),
+        nome: formatarNome(nomeEdicao),
         atualizado_em: serverTimestamp()
       })
 

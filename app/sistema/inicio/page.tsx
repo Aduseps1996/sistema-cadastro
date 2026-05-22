@@ -687,7 +687,7 @@ export default function InicioPage() {
                       <td className="px-5 py-3 align-middle">
                         <div>
                           <p className="font-semibold text-zinc-100">
-                            {pessoa?.nome || "Pessoa não encontrada"}
+                            {pessoa?.nome.toUpperCase() || "Pessoa não encontrada"}
                           </p>
 
                           {(atendimento.observacao || atendimento.motivo) && (

@@ -11,7 +11,9 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  setDoc
+  setDoc,
+  getDocs,
+  where
 } from "firebase/firestore"
 
 import {
@@ -78,6 +80,8 @@ export default function UsuariosPage() {
   const [emailEdicao, setEmailEdicao] = useState("")
   const [perfilEdicao, setPerfilEdicao] = useState("")
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
+
+  const [carregando, setCarregando] = useState(false)
 
   // =====================================================
   // CONSULTA EM TEMPO REAL
@@ -286,18 +290,45 @@ export default function UsuariosPage() {
   // REDEFINIR SENHA
   // =====================================================
   // Envia e-mail de redefinição para o usuário.
-  async function enviarRedefinicaoSenha(emailUsuario: string) {
-    if (acaoEmAndamento) return
+  async function redefinirSenha(emailUsuario: string) {
+    const emailFormatado = emailUsuario.trim().toLowerCase()
+
+    if (emailFormatado === "") {
+      toast.warning("E-mail inválido.")
+      return
+    }
 
     try {
-      setAcaoEmAndamento(`senha_${emailUsuario}`)
+      setAcaoEmAndamento(`senha_${emailFormatado}`)
 
-      await sendPasswordResetEmail(auth, emailUsuario)
+      const consultaUsuario = query(
+        collection(db, "usuarios"),
+        where("email", "==", emailFormatado)
+      )
+
+      const resultado = await getDocs(consultaUsuario)
+
+      if (resultado.empty) {
+        toast.warning("E-mail não cadastrado no sistema.")
+        return
+      }
+
+      const usuarioDoc = resultado.docs[0].data()
+
+      if (!usuarioDoc.ativo) {
+        toast.warning("Usuário inativo. Procure o administrador.")
+        return
+      }
+
+      await sendPasswordResetEmail(
+        auth,
+        emailFormatado
+      )
 
       toast.success("E-mail de redefinição enviado.")
     } catch (error) {
       console.error(error)
-      toast.error("Erro ao enviar redefinição de senha.")
+      toast.error("Não foi possível enviar o e-mail.")
     } finally {
       setAcaoEmAndamento("")
     }
@@ -754,8 +785,20 @@ export default function UsuariosPage() {
 
                               {/* REDEFINIR SENHA */}
                               <button
-                                onClick={() => enviarRedefinicaoSenha(usuario.email)}
-                                disabled={acaoEmAndamento === `senha_${usuario.email}`}
+                                onClick={() =>
+                                  redefinirSenha(usuario.email)
+                                }
+                                disabled={
+                                  acaoEmAndamento === `senha_${usuario.email}`
+                                }
+                                className="
+                              rounded-lg border border-blue-500/30
+                              bg-blue-500/10 px-3 py-2
+                              text-xs font-semibold text-blue-300
+                              transition hover:bg-blue-500/20
+                              disabled:cursor-not-allowed
+                              disabled:opacity-50
+                            "
                               >
                                 {acaoEmAndamento === `senha_${usuario.email}`
                                   ? "Enviando..."

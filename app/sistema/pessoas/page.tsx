@@ -17,6 +17,12 @@ import {
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 
+import {
+  formatarCPF,
+  formatarTelefone,
+  formatarNome
+} from "../../utils/formatadores"
+
 // =====================================================
 // TIPO DA PESSOA
 // =====================================================
@@ -111,10 +117,10 @@ export default function PessoasPage() {
       setAcaoEmAndamento("adicionar_pessoa")
 
       await addDoc(collection(db, "pessoas"), {
-        nome: nome.trim(),
-        telefone: telefone.trim(),
+        nome: formatarNome(nome),
+        telefone: telefone.replace(/\D/g, ""),
         email: email.trim().toLowerCase(),
-        cpf: cpf.trim(),
+        cpf: cpf.replace(/\D/g, ""),
         ativo: true,
         data_cadastro: serverTimestamp(),
         criado_em: serverTimestamp(),
@@ -155,10 +161,10 @@ export default function PessoasPage() {
       setAcaoEmAndamento(`salvar_${id}`)
 
       await updateDoc(doc(db, "pessoas", id), {
-        nome: nomeEdicao.trim(),
-        telefone: telefoneEdicao.trim(),
+        nome: formatarNome(nomeEdicao),
+        telefone: telefoneEdicao.replace(/\D/g, ""),
         email: emailEdicao.trim().toLowerCase(),
-        cpf: cpfEdicao.trim(),
+        cpf: cpfEdicao.replace(/\D/g, ""),
         atualizado_em: serverTimestamp()
       })
 
@@ -210,7 +216,7 @@ export default function PessoasPage() {
   // =====================================================
   function iniciarEdicao(pessoa: Pessoa) {
     setEditandoId(pessoa.id || "")
-    setNomeEdicao(pessoa.nome)
+    setNomeEdicao(formatarNome(pessoa.nome))
     setTelefoneEdicao(pessoa.telefone || "")
     setEmailEdicao(pessoa.email || "")
     setCpfEdicao(pessoa.cpf || "")
@@ -494,7 +500,9 @@ export default function PessoasPage() {
                         ) : (
                           <div>
                             <p className="text-zinc-300">
-                              {pessoa.telefone || "Sem telefone"}
+                              {pessoa.telefone
+                                ? formatarTelefone(pessoa.telefone)
+                                : "Sem telefone"}
                             </p>
 
                             <p className="mt-0.5 text-xs text-zinc-500">
@@ -521,7 +529,9 @@ export default function PessoasPage() {
                           />
                         ) : (
                           <p className="text-zinc-300">
-                            {pessoa.cpf || "Não informado"}
+                            {pessoa.cpf
+                              ? formatarCPF(pessoa.cpf)
+                              : "Não informado"}
                           </p>
                         )}
                       </td>

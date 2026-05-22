@@ -16,6 +16,8 @@ import {
 
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
+import { formatarNome } from "../../utils/formatadores"
+
 
 type Cargo = {
   id?: string
@@ -145,7 +147,7 @@ export default function ProfissionaisPage() {
       setAcaoEmAndamento("adicionar_profissional")
 
       await addDoc(collection(db, "profissionais"), {
-        nome: nome.trim(),
+        nome: formatarNome(nome),
         cargo_id: cargoId,
         ativo: true,
         criado_em: serverTimestamp(),
@@ -183,7 +185,9 @@ export default function ProfissionaisPage() {
       return
     }
 
-    if (cargoId === "") {
+
+
+    if (cargoIdEdicao === "") {
       toast.warning("Selecione o cargo.")
       return
     }
@@ -193,8 +197,8 @@ export default function ProfissionaisPage() {
       setAcaoEmAndamento(`salvar_${id}`)
 
       await updateDoc(doc(db, "profissionais", id), {
-        nome: nomeEdicao.trim(),
-        cargo_id: cargoId,
+        nome: formatarNome(nomeEdicao),
+        cargo_id: cargoIdEdicao,
         atualizado_em: serverTimestamp()
       })
 
