@@ -28,6 +28,8 @@ import {
   secondaryAuth
 } from "../../../lib/firebase"
 
+import { Botao } from "../../components/ui/Botao"
+
 // =====================================================
 // TIPO DO USUÁRIO
 // =====================================================
@@ -384,11 +386,11 @@ export default function UsuariosPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
 
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             Usuários
           </h1>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Cadastro e gerenciamento dos usuários do sistema.
           </p>
         </div>
@@ -403,10 +405,12 @@ export default function UsuariosPage() {
               setPesquisa(e.target.value)
             }
             className="
-              h-11 w-full rounded-xl border border-zinc-700
-              bg-zinc-900 px-4 text-sm text-zinc-100
+              h-11 w-full rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              dark:border-zinc-700
+              dark:bg-zinc-900 dark:text-zinc-100
               outline-none transition
-              placeholder:text-zinc-500
+              placeholder:text-zinc-500 dark:text-zinc-400
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
@@ -418,15 +422,15 @@ export default function UsuariosPage() {
       {/* =====================================================
           CARD DE CADASTRO
           ===================================================== */}
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+      <section className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-5 shadow-sm">
 
         <div className="mb-4">
 
-          <h2 className="text-base font-semibold text-zinc-100">
-            Novo usuário
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            Cadastrar novo usuário
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Cadastre usuários com perfil de acesso ao sistema.
           </p>
 
@@ -444,10 +448,12 @@ export default function UsuariosPage() {
               setNome(e.target.value)
             }
             className="
-              h-11 rounded-xl border border-zinc-700
-              bg-zinc-950 px-4 text-sm text-zinc-100
+              h-11 rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              dark:border-zinc-700
+              dark:bg-zinc-950 dark:text-zinc-100
               outline-none transition
-              placeholder:text-zinc-500
+              placeholder:text-zinc-500 dark:text-zinc-400
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
@@ -462,10 +468,12 @@ export default function UsuariosPage() {
               setEmail(e.target.value)
             }
             className="
-              h-11 rounded-xl border border-zinc-700
-              bg-zinc-950 px-4 text-sm text-zinc-100
+              h-11 rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              dark:border-zinc-700
+              dark:bg-zinc-950 dark:text-zinc-100
               outline-none transition
-              placeholder:text-zinc-500
+              placeholder:text-zinc-500 dark:text-zinc-400
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
@@ -480,10 +488,12 @@ export default function UsuariosPage() {
               setSenha(e.target.value)
             }
             className="
-              h-11 rounded-xl border border-zinc-700
-              bg-zinc-950 px-4 text-sm text-zinc-100
+              h-11 rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              dark:border-zinc-700
+              dark:bg-zinc-950 dark:text-zinc-100
               outline-none transition
-              placeholder:text-zinc-500
+              placeholder:text-zinc-500 dark:text-zinc-400
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
@@ -496,8 +506,10 @@ export default function UsuariosPage() {
               setPerfil(e.target.value)
             }
             className="
-              h-11 rounded-xl border border-zinc-700
-              bg-zinc-950 px-4 text-sm text-zinc-100
+              h-11 rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              dark:border-zinc-700
+              dark:bg-zinc-950 dark:text-zinc-100
               outline-none transition
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
@@ -536,16 +548,16 @@ export default function UsuariosPage() {
       {/* =====================================================
           TABELA DE USUÁRIOS
           ===================================================== */}
-      <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 shadow-sm">
 
         {/* TOPO DA TABELA */}
         <div className="border-b border-zinc-800 px-5 py-4">
 
-          <h2 className="text-base font-semibold text-zinc-100">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
             Usuários cadastrados
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {usuariosFiltrados.length} registro(s) encontrado(s)
           </p>
 
@@ -559,7 +571,7 @@ export default function UsuariosPage() {
               Nenhum usuário encontrado.
             </p>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Cadastre um novo usuário ou ajuste a pesquisa.
             </p>
 
@@ -573,7 +585,7 @@ export default function UsuariosPage() {
             <table className="w-full border-collapse text-sm">
 
               {/* CABEÇALHO */}
-              <thead className="bg-zinc-950/60 text-xs uppercase tracking-wider text-zinc-500">
+              <thead className="bg-zinc-100 text-xs uppercase tracking-wider text-zinc-600 dark:bg-zinc-950/60 dark:text-zinc-400">
 
                 <tr>
 
@@ -598,7 +610,7 @@ export default function UsuariosPage() {
               </thead>
 
               {/* CORPO */}
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
 
                 {usuariosFiltrados.map((usuario) => {
 
@@ -609,7 +621,7 @@ export default function UsuariosPage() {
 
                     <tr
                       key={usuario.id}
-                      className="transition hover:bg-zinc-800/50"
+                      className="transition hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                     >
 
                       {/* COLUNA USUÁRIO */}
@@ -626,8 +638,10 @@ export default function UsuariosPage() {
                                 setNomeEdicao(e.target.value)
                               }
                               className="
-                                h-10 rounded-lg border border-zinc-700
-                                bg-zinc-950 px-3 text-sm text-zinc-100
+                                h-10 rounded-lg border border-zinc-300
+                                bg-white px-3 text-sm text-zinc-900
+                                dark:border-zinc-700
+                                dark:bg-zinc-950 dark:text-zinc-100
                                 outline-none transition
                                 focus:border-blue-500/60
                                 focus:ring-2 focus:ring-blue-500/20
@@ -641,8 +655,10 @@ export default function UsuariosPage() {
                                 setEmailEdicao(e.target.value)
                               }
                               className="
-                                h-10 rounded-lg border border-zinc-700
-                                bg-zinc-950 px-3 text-sm text-zinc-100
+                                h-10 rounded-lg border border-zinc-300
+                                bg-white px-3 text-sm text-zinc-900
+                                dark:border-zinc-700
+                                dark:bg-zinc-950 dark:text-zinc-100
                                 outline-none transition
                                 focus:border-blue-500/60
                                 focus:ring-2 focus:ring-blue-500/20
@@ -655,11 +671,11 @@ export default function UsuariosPage() {
 
                           <div>
 
-                            <p className="font-semibold text-zinc-100">
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                               {usuario.nome}
                             </p>
 
-                            <p className="mt-0.5 text-xs text-zinc-500">
+                            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                               {usuario.email}
                             </p>
 
@@ -680,11 +696,15 @@ export default function UsuariosPage() {
                               setPerfilEdicao(e.target.value)
                             }
                             className="
-                              h-10 w-full rounded-lg border border-zinc-700
-                              bg-zinc-950 px-3 text-sm text-zinc-100
+                              h-10 w-full rounded-lg border border-zinc-300
+                              bg-white px-3 text-sm text-zinc-900
                               outline-none transition
                               focus:border-blue-500/60
                               focus:ring-2 focus:ring-blue-500/20
+
+                              dark:border-zinc-700
+                              dark:bg-zinc-950
+                              dark:text-zinc-100
                             "
                           >
                             <option value="">
@@ -719,8 +739,8 @@ export default function UsuariosPage() {
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
                             ${usuario.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
                             }
                           `}
                         >
@@ -734,54 +754,45 @@ export default function UsuariosPage() {
                       {/* COLUNA AÇÕES */}
                       <td className="px-5 py-3 align-middle">
 
-                        <div className="flex justify-end gap-2 flex-wrap">
+                        <div className="flex justify-end gap-2 whitespace-nowrap">
 
                           {estaEditando ? (
 
                             <>
                               {/* SALVAR */}
-                              <button
+                              <Botao
                                 onClick={() =>
                                   salvarEdicaoUsuario(usuario.id!)
                                 }
-                                className="
-                                  rounded-lg border border-blue-500/40
-                                  bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                  transition hover:bg-blue-500
-                                "
+                                variante="primario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Salvar
-                              </button>
+                              </Botao>
 
                               {/* CANCELAR */}
-                              <button
+                              <Botao
                                 onClick={cancelarEdicao}
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Cancelar
-                              </button>
+                              </Botao>
                             </>
 
                           ) : (
 
                             <>
                               {/* EDITAR */}
-                              <button
+                              <Botao
                                 onClick={() =>
                                   iniciarEdicao(usuario)
                                 }
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Editar
-                              </button>
+                              </Botao>
 
                               {/* REDEFINIR SENHA */}
                               <button
@@ -792,40 +803,39 @@ export default function UsuariosPage() {
                                   acaoEmAndamento === `senha_${usuario.email}`
                                 }
                                 className="
-                              rounded-lg border border-blue-500/30
-                              bg-blue-500/10 px-3 py-2
-                              text-xs font-semibold text-blue-300
-                              transition hover:bg-blue-500/20
-                              disabled:cursor-not-allowed
-                              disabled:opacity-50
-                            "
+                                  rounded-lg border border-blue-500/30
+                                  bg-blue-500/10 px-3 py-2
+                                  text-xs font-semibold text-blue-700 dark:text-blue-300
+                                  transition hover:bg-blue-500/20
+                                  disabled:cursor-not-allowed
+                                  disabled:opacity-50
+                                "
                               >
                                 {acaoEmAndamento === `senha_${usuario.email}`
                                   ? "Enviando..."
                                   : "Redefinir senha"}
                               </button>
 
-                              {/* STATUS */}
+                              {/* Botão de status */}
                               {usuario.id && (
-                                <button
+                                <Botao
                                   onClick={() =>
                                     alternarStatus(
                                       usuario.id!,
                                       usuario.ativo
                                     )
                                   }
-                                  className={`
-                                    rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    ${usuario.ativo
-                                      ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                      : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
-                                    }
-                                  `}
+                                  variante={
+                                    usuario.ativo
+                                      ? "perigo"
+                                      : "sucesso"
+                                  }
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   {usuario.ativo
                                     ? "Inativar"
                                     : "Reativar"}
-                                </button>
+                                </Botao>
                               )}
                             </>
 

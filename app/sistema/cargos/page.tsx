@@ -17,6 +17,8 @@ import {
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 import { formatarNome } from "../../utils/formatadores"
+import { Input } from "../../components/ui/Input"
+import { Botao } from "../../components/ui/Botao"
 
 // =====================================================
 // TIPO DO CARGO
@@ -286,117 +288,81 @@ export default function CargosPage() {
   )
 
   return (
-    // =====================================================
-    // CONTAINER PRINCIPAL DA PÁGINA
-    // =====================================================
-    // Aqui não usamos mais min-h-screen nem bg-zinc-950,
-    // porque isso já vem do layout principal do sistema.
     <div className="space-y-6">
-
       {/* =====================================================
           CABEÇALHO DA PÁGINA
-          =====================================================
-          Área superior com título, descrição e busca.
-          Esse padrão depois pode ser repetido em outras páginas.
-      */}
+          ===================================================== */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             Cargos
           </h1>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Cadastro de cargos e funções dos profissionais.
           </p>
         </div>
 
         {/* CAMPO DE BUSCA */}
         <div className="w-full md:w-80">
-          <input
-            type="text"
+          <Input
             placeholder="Pesquisar por nome"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
-            className="
-              h-11 w-full rounded-xl border border-zinc-700
-              bg-zinc-900 px-4 text-sm text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
           />
         </div>
       </div>
 
       {/* =====================================================
           CARD DE CADASTRO
-          =====================================================
-          Bloco usado para cadastrar um novo cargo.
-          Visual mais compacto, com menos altura e melhor alinhamento.
-      */}
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-zinc-100">
-            Novo cargo
-          </h2>
+          ===================================================== */}
+      {podeGerenciar && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Novo cargo
+            </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
-            Informe o nome do cargo que será vinculado aos profissionais.
-          </p>
-        </div>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Informe o nome do cargo que será vinculado aos profissionais.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_160px]">
-          {/* INPUT DO NOVO CARGO */}
-          <input
-            type="text"
-            placeholder="Ex: Advogado, Recepcionista, Coordenador"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            className="
-              h-11 rounded-xl border border-zinc-700
-              bg-zinc-950 px-4 text-sm text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
-          />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_160px]">
+            {/* INPUT DO NOVO CARGO */}
+            <Input
+              placeholder="Ex: Advogado, Recepcionista, Coordenador"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
 
-          {/* BOTÃO ADICIONAR */}
-          <button
-            onClick={adicionarCargo}
-            disabled={acaoEmAndamento === "adicionar_cargo"}
-            className="
-              h-11 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
-          >
-            {acaoEmAndamento === "adicionar_cargo"
-              ? "Adicionando..."
-              : "Adicionar cargo"}
-          </button>
-        </div>
-      </section>
+            {/* BOTÃO ADICIONAR */}
+            <Botao
+              onClick={adicionarCargo}
+              disabled={acaoEmAndamento === "adicionar_cargo"}
+              variante="primario"
+              className="h-11 px-5"
+            >
+              {acaoEmAndamento === "adicionar_cargo"
+                ? "Adicionando..."
+                : "Adicionar cargo"}
+            </Botao>
+          </div>
+        </section>
+      )}
 
       {/* =====================================================
           CARD DA LISTAGEM
-          =====================================================
-          Bloco que exibe a lista de cargos cadastrados.
-          Agora usa aparência de tabela administrativa.
-      */}
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm overflow-hidden">
-
+          ===================================================== */}
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         {/* CABEÇALHO DA LISTAGEM */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Cargos cadastrados
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               {cargosFiltrados.length} registro(s) encontrado(s)
             </p>
           </div>
@@ -404,16 +370,14 @@ export default function CargosPage() {
 
         {/* =====================================================
             ESTADO VAZIO
-            =====================================================
-            Exibido quando não existe cargo ou quando a busca não encontra nada.
-        */}
+            ===================================================== */}
         {cargosFiltrados.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm font-medium text-zinc-300">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Nenhum cargo encontrado.
             </p>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Cadastre um novo cargo ou ajuste o termo pesquisado.
             </p>
           </div>
@@ -421,16 +385,12 @@ export default function CargosPage() {
 
         {/* =====================================================
             TABELA ADMINISTRATIVA
-            =====================================================
-            Em sistemas administrativos, tabela é melhor que card
-            para cadastro simples. Fica mais compacto e profissional.
-        */}
+            ===================================================== */}
         {cargosFiltrados.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-
               {/* CABEÇALHO DA TABELA */}
-              <thead className="bg-zinc-950/60 text-xs uppercase tracking-wider text-zinc-500">
+              <thead className="bg-zinc-100 text-xs uppercase tracking-wider text-zinc-600 dark:bg-zinc-950/60 dark:text-zinc-500">
                 <tr>
                   <th className="px-5 py-3 text-left font-semibold">
                     Cargo
@@ -447,37 +407,30 @@ export default function CargosPage() {
               </thead>
 
               {/* CORPO DA TABELA */}
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {cargosFiltrados.map((cargo) => {
                   const estaEditando = editandoId === cargo.id
 
                   return (
                     <tr
                       key={cargo.id}
-                      className="transition hover:bg-zinc-800/50"
+                      className="transition hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                     >
                       {/* COLUNA CARGO */}
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <input
-                            type="text"
+                          <Input
                             value={nomeEdicao}
                             onChange={(e) => setNomeEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-700
-                              bg-zinc-950 px-3 text-sm text-zinc-100
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                            "
+                            className="h-10"
                           />
                         ) : (
                           <div>
-                            <p className="font-semibold text-zinc-100">
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                               {cargo.nome}
                             </p>
 
-                            <p className="mt-0.5 text-xs text-zinc-500">
+                            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                               Cadastro de cargo profissional
                             </p>
                           </div>
@@ -491,8 +444,8 @@ export default function CargosPage() {
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
                             ${cargo.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-300"
                             }
                           `}
                         >
@@ -506,46 +459,41 @@ export default function CargosPage() {
                           {estaEditando ? (
                             <>
                               {/* BOTÃO SALVAR */}
-                              <button
+                              <Botao
                                 onClick={() => salvarEdicaoCargo(cargo.id!)}
-                                className="
-                                  rounded-lg border border-blue-500/40
-                                  bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                  transition hover:bg-blue-500
-                                "
+                                disabled={acaoEmAndamento === `salvar_${cargo.id}`}
+                                className="px-2 py-1.5 text-xs"
                               >
-                                Salvar
-                              </button>
+                                {acaoEmAndamento === `salvar_${cargo.id}`
+                                  ? "Salvando..."
+                                  : "Salvar"}
+                              </Botao>
 
                               {/* BOTÃO CANCELAR */}
-                              <button
+                              <Botao
                                 onClick={cancelarEdicao}
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
+                                disabled={acaoEmAndamento !== ""}
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Cancelar
-                              </button>
+                              </Botao>
                             </>
                           ) : (
                             <>
                               {/* BOTÃO EDITAR */}
-                              <button
+                              <Botao
                                 onClick={() => iniciarEdicao(cargo)}
-                                className="
-                                  rounded-lg border border-zinc-700
-                                  bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                  transition hover:bg-zinc-700
-                                "
+                                disabled={acaoEmAndamento !== ""}
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Editar
-                              </button>
+                              </Botao>
 
                               {/* BOTÃO INATIVAR / REATIVAR */}
                               {cargo.id && (
-                                <button
+                                <Botao
                                   onClick={() =>
                                     alternarStatusCargo(
                                       cargo.id!,
@@ -553,21 +501,20 @@ export default function CargosPage() {
                                     )
                                   }
                                   disabled={acaoEmAndamento === `status_${cargo.id}`}
-                                  className={`
-                                    rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    disabled:cursor-not-allowed disabled:opacity-50
-                                    ${cargo.ativo
-                                      ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                      : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
-                                    }
-                                  `}
+
+                                  variante={
+                                    cargo.ativo
+                                      ? "perigo"
+                                      : "sucesso"
+                                  }
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   {acaoEmAndamento === `status_${cargo.id}`
                                     ? "Aguarde..."
                                     : cargo.ativo
                                       ? "Inativar"
                                       : "Reativar"}
-                                </button>
+                                </Botao>
                               )}
                             </>
                           )}
@@ -581,7 +528,6 @@ export default function CargosPage() {
           </div>
         )}
       </section>
-
     </div>
   )
 }

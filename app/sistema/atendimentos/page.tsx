@@ -856,13 +856,13 @@ export default function AtendimentosPage() {
   function classeStatus(status: StatusAtendimento) {
     const classes: Record<StatusAtendimento, string> = {
       aguardando:
-        "border-amber-500/30 bg-amber-500/10 text-amber-300",
+        "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
       em_atendimento:
-        "border-sky-500/30 bg-sky-500/10 text-sky-300",
+        "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
       finalizado:
-        "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+        "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
       cancelado:
-        "border-rose-500/30 bg-rose-500/10 text-rose-300"
+        "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300"
     }
 
     return classes[status]
@@ -954,11 +954,11 @@ export default function AtendimentosPage() {
           ===================================================== */}
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           Atendimentos
         </h1>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
           Registro de chegada, fila e controle de atendimento da ADUSEPS.
         </p>
       </div>
@@ -968,30 +968,30 @@ export default function AtendimentosPage() {
           ===================================================== */}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
-          <p className="text-xs font-medium text-zinc-500">Aguardando</p>
-          <p className="mt-1 text-2xl font-bold text-amber-300">
+        <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-4">
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500">Aguardando</p>
+          <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">
             {totalAguardando}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
-          <p className="text-xs font-medium text-zinc-500">Em atendimento</p>
-          <p className="mt-1 text-2xl font-bold text-sky-300">
+        <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-4">
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500">Em atendimento</p>
+          <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">
             {totalEmAtendimento}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
-          <p className="text-xs font-medium text-zinc-500">Finalizados</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-300">
+        <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-4">
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500">Finalizados</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">
             {totalFinalizados}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
-          <p className="text-xs font-medium text-zinc-500">Cancelados</p>
-          <p className="mt-1 text-2xl font-bold text-rose-300">
+        <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-4">
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-500">Cancelados</p>
+          <p className="mt-1 text-2xl font-bold text-rose-700 dark:text-rose-300">
             {totalCancelados}
           </p>
         </div>
@@ -1001,13 +1001,13 @@ export default function AtendimentosPage() {
           FORMULÁRIO DE NOVO ATENDIMENTO
           ===================================================== */}
       {podeRegistrarChegada && (
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+        <section className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-5 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Novo atendimento
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
               Registre a chegada da pessoa e envie para a fila de atendimento.
             </p>
           </div>
@@ -1020,7 +1020,7 @@ export default function AtendimentosPage() {
                 setMatricula("")
                 setConvenioId("")
               }}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="associado">Associado</option>
               <option value="nao_associado">Não associado</option>
@@ -1031,7 +1031,7 @@ export default function AtendimentosPage() {
               placeholder="Nome da pessoa"
               value={nomePessoa}
               onChange={(e) => setNomePessoa(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             />
 
             <input
@@ -1040,13 +1040,13 @@ export default function AtendimentosPage() {
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
               disabled={tipo === "nao_associado"}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             />
 
             <select
               value={convenioId}
               onChange={(e) => setConvenioId(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">
                 {tipo === "associado"
@@ -1070,7 +1070,7 @@ export default function AtendimentosPage() {
                 setNomeRepresentante("")
                 setTipoRepresentante("")
               }}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="nao">Sem representante</option>
               <option value="sim">Com representante</option>
@@ -1083,13 +1083,13 @@ export default function AtendimentosPage() {
                   placeholder="Nome do representante"
                   value={nomeRepresentante}
                   onChange={(e) => setNomeRepresentante(e.target.value)}
-                  className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
                 />
 
                 <select
                   value={tipoRepresentante}
                   onChange={(e) => setTipoRepresentante(e.target.value)}
-                  className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+                  className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
                 >
                   <option value="">Tipo de representante</option>
 
@@ -1105,7 +1105,7 @@ export default function AtendimentosPage() {
             <select
               value={profissionalPreferencialId}
               onChange={(e) => setProfissionalPreferencialId(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="">Sem preferência por profissional</option>
 
@@ -1123,19 +1123,17 @@ export default function AtendimentosPage() {
             placeholder="Observação / motivo do atendimento"
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
-            className="mt-3 min-h-[88px] w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="mt-3 min-h-[88px] w-full resize-none rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
           />
 
           <div className="mt-4 flex justify-end">
             <button
               onClick={registrarChegada}
               disabled={acaoEmAndamento === "registrar_chegada"}
-              className="
-                h-11 rounded-xl border border-blue-500/40
-                bg-blue-600 px-6 text-sm font-semibold text-white
-                transition hover:bg-blue-500
-                disabled:cursor-not-allowed disabled:opacity-50
-              "
+              className="mt-4 h-11 rounded-xl border border-blue-500/40
+              bg-blue-600 px-5 text-sm font-semibold text-white
+              transition hover:bg-blue-500
+              disabled:cursor-not-allowed disabled:opacity-50"
             >
               {acaoEmAndamento === "registrar_chegada"
                 ? "Salvando..."
@@ -1149,14 +1147,14 @@ export default function AtendimentosPage() {
           FILA DE ATENDIMENTOS
           ===================================================== */}
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+      <section className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-5 shadow-sm">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Atendimentos do dia
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
               {atendimentosFiltrados.length} atendimento(s) na visualização atual
             </p>
           </div>
@@ -1172,9 +1170,9 @@ export default function AtendimentosPage() {
               <button
                 key={status}
                 onClick={() => setFiltroStatus(status)}
-                className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${filtroStatus === status
-                    ? "bg-blue-600 text-white"
-                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${filtroStatus === status
+                    ? "border-zinc-300 bg-blue-600 text-white dark:border-zinc-700 dark:bg-blue-600 dark:text-zinc-100"
+                    : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                   }`}
               >
                 {status === "todos"
@@ -1187,8 +1185,8 @@ export default function AtendimentosPage() {
 
         <div className="space-y-3">
           {atendimentosFiltrados.length === 0 && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-5 py-8 text-center">
-              <p className="text-sm font-medium text-zinc-300">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/50 px-5 py-8 text-center">
+              <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Nenhum atendimento registrado hoje.
               </p>
             </div>
@@ -1218,12 +1216,12 @@ export default function AtendimentosPage() {
             return (
               <div
                 key={atendimento.id}
-                className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 transition hover:bg-zinc-900"
+                className="rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/50 px-4 py-3 transition hover:bg-zinc-100 dark:hover:bg-zinc-900"
               >
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-base font-semibold text-zinc-100">
+                      <p className="truncate text-base font-semibold text-zinc-900 dark:text-zinc-100">
                         {pessoa?.nome.toUpperCase() || "Pessoa não encontrada"}
                       </p>
 
@@ -1236,7 +1234,7 @@ export default function AtendimentosPage() {
                       </span>
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-400">
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
                       <span>
                         {atendimento.tipo === "associado"
                           ? "Associado"
@@ -1262,7 +1260,7 @@ export default function AtendimentosPage() {
                     {(pessoaRepresentante ||
                       profissionalPreferencial ||
                       atendimento.observacao) && (
-                        <div className="mt-2 space-y-1 text-sm text-zinc-400">
+                        <div className="mt-2 space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
                           {pessoaRepresentante && representante && (
                             <p>
                               Representante: {pessoaRepresentante.nome} (
@@ -1277,14 +1275,14 @@ export default function AtendimentosPage() {
                           )}
 
                           {atendimento.observacao && (
-                            <p className="text-zinc-300">
+                            <p className="text-zinc-700 dark:text-zinc-300">
                               Obs: {atendimento.observacao}
                             </p>
                           )}
                         </div>
                       )}
 
-                    <div className="mt-2 text-xs text-zinc-500">
+                    <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
                       {atendimento.data_hora_chegada && (
                         <span>
                           Chegada:{" "}
@@ -1349,18 +1347,18 @@ export default function AtendimentosPage() {
                                   [atendimento.id!]: ""
                                 }))
                               }}
-                              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+                              className="h-10 w-full rounded-lg border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
                             />
 
                             {(buscaProfissionalInicio[atendimento.id] || "")
                               .trim()
                               .length >= 2 &&
                               !profissionalInicioId[atendimento.id] && (
-                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-2xl">
                                   {profissionaisEncontradosPorAtendimento(
                                     atendimento.id
                                   ).length === 0 && (
-                                      <p className="px-4 py-3 text-sm text-zinc-400">
+                                      <p className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
                                         Nenhum profissional encontrado.
                                       </p>
                                     )}
@@ -1388,7 +1386,7 @@ export default function AtendimentosPage() {
                                           })
                                         )
                                       }}
-                                      className="w-full px-4 py-3 text-left text-sm text-zinc-200 transition hover:bg-zinc-800"
+                                      className="w-full px-4 py-3 text-left text-sm text-zinc-700 dark:text-zinc-200 transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                     >
                                       {profissionalItem.nome}
                                     </button>
@@ -1400,12 +1398,7 @@ export default function AtendimentosPage() {
                           <button
                             onClick={() => iniciarAtendimento(atendimento.id!)}
                             disabled={acaoEmAndamento === `iniciar_${atendimento.id}`}
-                            className="
-                              h-10 rounded-lg border border-blue-500/40
-                              bg-blue-600 px-3 text-sm font-semibold text-white
-                              transition hover:bg-blue-500
-                              disabled:cursor-not-allowed disabled:opacity-50
-                            "
+                            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                           >
                             {acaoEmAndamento === `iniciar_${atendimento.id}`
                               ? "Iniciando..."
@@ -1421,12 +1414,7 @@ export default function AtendimentosPage() {
                         <button
                           onClick={() => finalizarAtendimento(atendimento.id!)}
                           disabled={acaoEmAndamento === `finalizar_${atendimento.id}`}
-                          className="
-                                h-10 rounded-lg border border-emerald-500/30
-                                bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-300
-                                transition hover:bg-emerald-500/20
-                                disabled:cursor-not-allowed disabled:opacity-50
-                              "
+                          className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                         >
                           {acaoEmAndamento === `finalizar_${atendimento.id}`
                             ? "Finalizando..."
@@ -1445,12 +1433,7 @@ export default function AtendimentosPage() {
                             setModalCancelamentoAberto(true)
                           }}
                           disabled={acaoEmAndamento === `cancelar_${atendimento.id}`}
-                          className="
-                            h-10 rounded-lg border border-red-500/30
-                            bg-red-500/10 px-3 text-sm font-semibold text-red-300
-                            transition hover:bg-red-500/20
-                            disabled:cursor-not-allowed disabled:opacity-50
-                          "
+                          className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                         >
                           {acaoEmAndamento === `cancelar_${atendimento.id}`
                             ? "Cancelando..."
@@ -1471,13 +1454,13 @@ export default function AtendimentosPage() {
       {modalCancelamentoAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
 
-          <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
 
-            <h2 className="text-lg font-semibold text-zinc-100">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
               Cancelar atendimento
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
               Informe o motivo do cancelamento para registrar no histórico.
             </p>
 
@@ -1487,9 +1470,9 @@ export default function AtendimentosPage() {
               placeholder="Digite o motivo do cancelamento"
               className="
               mt-4 min-h-[120px] w-full resize-none rounded-xl
-              border border-zinc-700 bg-zinc-950 px-4 py-3
-              text-sm text-zinc-100 outline-none transition
-              placeholder:text-zinc-500
+              border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 py-3
+              text-sm text-zinc-900 dark:text-zinc-100 outline-none transition
+              placeholder:text-zinc-400 dark:placeholder:text-zinc-500
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
             "
@@ -1505,12 +1488,7 @@ export default function AtendimentosPage() {
                   setMotivoCancelamento("")
                 }}
                 disabled={acaoEmAndamento.startsWith("cancelar_")}
-                className="
-                h-10 rounded-lg border border-zinc-700
-                bg-zinc-800 px-4 text-sm font-semibold text-zinc-100
-                transition hover:bg-zinc-700
-                disabled:cursor-not-allowed disabled:opacity-50
-              "
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
               >
                 Voltar
               </button>
@@ -1519,12 +1497,7 @@ export default function AtendimentosPage() {
                 type="button"
                 onClick={confirmarCancelamentoAtendimento}
                 disabled={acaoEmAndamento.startsWith("cancelar_")}
-                className="
-                h-10 rounded-lg border border-red-500/30
-                bg-red-500/10 px-4 text-sm font-semibold text-red-300
-                transition hover:bg-red-500/20
-                disabled:cursor-not-allowed disabled:opacity-50
-              "
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
               >
                 {acaoEmAndamento.startsWith("cancelar_")
                   ? "Cancelando..."

@@ -1,40 +1,45 @@
 type InputProps = {
-  label?: string
-  value: string
-  onChange: (valor: string) => void
-  placeholder?: string
   type?: string
+  placeholder?: string
+  value: string
+  onChange: (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => void
+  disabled?: boolean
+  className?: string
 }
 
 export function Input({
-  label,
+  type = "text",
+  placeholder,
   value,
   onChange,
-  placeholder,
-  type = "text"
+  disabled,
+  className = ""
 }: InputProps) {
-  return (
-    <label className="block">
-      {label && (
-        <span className="mb-1.5 block text-sm font-medium text-zinc-300">
-          {label}
-        </span>
-      )}
 
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="
-          h-11 w-full rounded-xl border border-zinc-700
-          bg-zinc-900 px-4 text-sm text-zinc-100
-          outline-none transition
-          placeholder:text-zinc-500
-          focus:border-blue-500/60
-          focus:ring-2 focus:ring-blue-500/20
-        "
-      />
-    </label>
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className={`
+        h-11 w-full rounded-xl border border-zinc-300
+        bg-white px-4 text-sm text-zinc-900
+        outline-none transition
+        placeholder:text-zinc-400
+        focus:border-blue-500/60
+        focus:ring-2 focus:ring-blue-500/20
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+        dark:border-zinc-700
+        dark:bg-zinc-950
+        dark:text-zinc-100
+        dark:placeholder:text-zinc-500
+        ${className}
+      `}
+    />
   )
 }

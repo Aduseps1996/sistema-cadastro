@@ -364,11 +364,11 @@ export default function AssociadosPage() {
 
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             Associados
           </h1>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Cadastro de associados da ADUSEPS.
           </p>
         </div>
@@ -380,11 +380,13 @@ export default function AssociadosPage() {
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
             className="
-              h-11 w-full rounded-xl border border-zinc-700
-              bg-zinc-900 px-4 text-sm text-zinc-100
-              outline-none transition placeholder:text-zinc-500
+              h-11 w-full rounded-xl border border-zinc-300
+              bg-white px-4 text-sm text-zinc-900
+              outline-none transition placeholder:text-zinc-400
               focus:border-blue-500/60
               focus:ring-2 focus:ring-blue-500/20
+              dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100
+              dark:placeholder:text-zinc-500
             "
           />
         </div>
@@ -394,13 +396,13 @@ export default function AssociadosPage() {
           CARD DE CADASTRO
           ===================================================== */}
       {podeGerenciar && (
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Novo associado
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Vincule uma pessoa cadastrada a uma matrícula de associado.
             </p>
           </div>
@@ -418,18 +420,20 @@ export default function AssociadosPage() {
                   setPessoaId("")
                 }}
                 className="
-                  h-11 w-full rounded-xl border border-zinc-700
-                  bg-zinc-950 px-4 text-sm text-zinc-100
-                  outline-none transition placeholder:text-zinc-500
+                  h-11 w-full rounded-xl border border-zinc-300
+                  bg-white px-4 text-sm text-zinc-900
+                  outline-none transition placeholder:text-zinc-400
                   focus:border-blue-500/60
                   focus:ring-2 focus:ring-blue-500/20
+                  dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
+                  dark:placeholder:text-zinc-500
                 "
               />
 
               {buscaPessoa.trim().length >= 2 && pessoaId === "" && (
-                <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+                <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900">
                   {pessoasEncontradas.length === 0 && (
-                    <p className="px-4 py-3 text-sm text-zinc-400">
+                    <p className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                       Nenhuma pessoa encontrada.
                     </p>
                   )}
@@ -443,8 +447,9 @@ export default function AssociadosPage() {
                         setBuscaPessoa(pessoa.nome)
                       }}
                       className="
-                        w-full px-4 py-3 text-left text-sm text-zinc-200
-                        transition hover:bg-zinc-800
+                        w-full px-4 py-3 text-left text-sm text-zinc-700
+                        transition hover:bg-zinc-100
+                        dark:text-zinc-200 dark:hover:bg-zinc-800
                       "
                     >
                       {pessoa.nome}
@@ -462,11 +467,13 @@ export default function AssociadosPage() {
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
               className="
-                h-11 rounded-xl border border-zinc-700
-                bg-zinc-950 px-4 text-sm text-zinc-100
-                outline-none transition placeholder:text-zinc-500
+                h-11 rounded-xl border border-zinc-300
+                bg-white px-4 text-sm text-zinc-900
+                outline-none transition placeholder:text-zinc-400
                 focus:border-blue-500/60
                 focus:ring-2 focus:ring-blue-500/20
+                dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
+                dark:placeholder:text-zinc-500
               "
             />
           </div>
@@ -492,24 +499,24 @@ export default function AssociadosPage() {
           TABELA DE ASSOCIADOS
           ===================================================== */}
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm">
-        <div className="border-b border-zinc-800 px-5 py-4">
-          <h2 className="text-base font-semibold text-zinc-100">
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
             Associados cadastrados
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {associadosFiltrados.length} registro(s) encontrado(s)
           </p>
         </div>
 
         {associadosFiltrados.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm font-medium text-zinc-300">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Nenhum associado encontrado.
             </p>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Cadastre um novo associado ou ajuste a pesquisa.
             </p>
           </div>
@@ -518,7 +525,7 @@ export default function AssociadosPage() {
         {associadosFiltrados.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-              <thead className="bg-zinc-950/60 text-xs uppercase tracking-wider text-zinc-500">
+              <thead className="bg-zinc-100 text-xs uppercase tracking-wider text-zinc-600 dark:bg-zinc-950/60 dark:text-zinc-500">
                 <tr>
                   <th className="px-5 py-3 text-left font-semibold">
                     Associado
@@ -540,14 +547,14 @@ export default function AssociadosPage() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {associadosFiltrados.map((associado) => {
                   const estaEditando = editandoId === associado.id
 
                   return (
                     <tr
                       key={associado.id}
-                      className="transition hover:bg-zinc-800/50"
+                      className="transition hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                     >
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
@@ -555,11 +562,12 @@ export default function AssociadosPage() {
                             value={pessoaIdEdicao}
                             onChange={(e) => setPessoaIdEdicao(e.target.value)}
                             className="
-                              h-10 w-full rounded-lg border border-zinc-700
-                              bg-zinc-950 px-3 text-sm text-zinc-100
+                              h-10 w-full rounded-lg border border-zinc-300
+                              bg-white px-3 text-sm text-zinc-900
                               outline-none transition
                               focus:border-blue-500/60
                               focus:ring-2 focus:ring-blue-500/20
+                              dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
                             "
                           >
                             <option value="">Selecione a pessoa</option>
@@ -578,11 +586,11 @@ export default function AssociadosPage() {
                           </select>
                         ) : (
                           <div>
-                            <p className="font-semibold text-zinc-100">
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                               {buscarNomePessoa(associado.pessoa_id)}
                             </p>
 
-                            <p className="mt-0.5 text-xs text-zinc-500">
+                            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                               Pessoa vinculada como associado
                             </p>
                           </div>
@@ -598,15 +606,16 @@ export default function AssociadosPage() {
                               setMatriculaEdicao(e.target.value)
                             }
                             className="
-                              h-10 w-full rounded-lg border border-zinc-700
-                              bg-zinc-950 px-3 text-sm text-zinc-100
+                              h-10 w-full rounded-lg border border-zinc-300
+                              bg-white px-3 text-sm text-zinc-900
                               outline-none transition
                               focus:border-blue-500/60
                               focus:ring-2 focus:ring-blue-500/20
+                              dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
                             "
                           />
                         ) : (
-                          <p className="text-zinc-300">
+                          <p className="text-zinc-700 dark:text-zinc-300">
                             {associado.matricula}
                           </p>
                         )}
@@ -618,8 +627,8 @@ export default function AssociadosPage() {
                             inline-flex items-center rounded-full border px-2.5 py-1
                             text-xs font-semibold
                             ${associado.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
+                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-300"
                             }
                           `}
                         >
@@ -648,9 +657,11 @@ export default function AssociadosPage() {
                                 <button
                                   onClick={cancelarEdicao}
                                   className="
-                                    rounded-lg border border-zinc-700
-                                    bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                    transition hover:bg-zinc-700
+                                    rounded-lg border border-zinc-300
+                                    bg-white px-3 py-2 text-xs font-semibold text-zinc-700
+                                    transition hover:bg-zinc-100
+                                    dark:border-zinc-700 dark:bg-zinc-800
+                                    dark:text-zinc-100 dark:hover:bg-zinc-700
                                   "
                                 >
                                   Cancelar
@@ -661,9 +672,11 @@ export default function AssociadosPage() {
                                 <button
                                   onClick={() => iniciarEdicao(associado)}
                                   className="
-                                    rounded-lg border border-zinc-700
-                                    bg-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-100
-                                    transition hover:bg-zinc-700
+                                    rounded-lg border border-zinc-300
+                                    bg-white px-3 py-2 text-xs font-semibold text-zinc-700
+                                    transition hover:bg-zinc-100
+                                    dark:border-zinc-700 dark:bg-zinc-800
+                                    dark:text-zinc-100 dark:hover:bg-zinc-700
                                   "
                                 >
                                   Editar
@@ -680,8 +693,8 @@ export default function AssociadosPage() {
                                     className={`
                                       rounded-lg border px-3 py-2 text-xs font-semibold transition
                                       ${associado.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                        : "border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                                        ? "border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-300"
+                                        : "border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-300"
                                       }
                                     `}
                                   >

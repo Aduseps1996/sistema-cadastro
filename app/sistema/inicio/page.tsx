@@ -11,10 +11,6 @@ import {
 
 import { db } from "../../../lib/firebase"
 
-// =====================================================
-// TIPOS DAS ENTIDADES
-// =====================================================
-
 type Pessoa = {
   id?: string
   nome: string
@@ -52,10 +48,6 @@ type Atendimento = {
   fim_atendimento?: any
 }
 
-// =====================================================
-// OPÇÕES DOS FILTROS
-// =====================================================
-
 const statusOpcoes = [
   { valor: "todos", nome: "Todos" },
   { valor: "aguardando", nome: "Aguardando" },
@@ -71,19 +63,11 @@ const tiposOpcoes = [
 ]
 
 export default function InicioPage() {
-  // =====================================================
-  // LISTAS VINDAS DO FIRESTORE
-  // =====================================================
-
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [associados, setAssociados] = useState<Associado[]>([])
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
-
-  // =====================================================
-  // ESTADOS DOS FILTROS
-  // =====================================================
 
   const [dataInicial, setDataInicial] = useState("")
   const [dataFinal, setDataFinal] = useState("")
@@ -93,22 +77,11 @@ export default function InicioPage() {
   const [profissionalFiltro, setProfissionalFiltro] = useState("todos")
   const [convenioFiltro, setConvenioFiltro] = useState("todos")
 
-  // =====================================================
-  // ESTADO DA PAGINAÇÃO
-  // =====================================================
-
   const [paginaAtual, setPaginaAtual] = useState(1)
   const itensPorPagina = 50
 
-  // =====================================================
-  // CONSULTA DE PESSOAS
-  // =====================================================
-
   useEffect(() => {
-    const consulta = query(
-      collection(db, "pessoas"),
-      orderBy("nome", "asc")
-    )
+    const consulta = query(collection(db, "pessoas"), orderBy("nome", "asc"))
 
     const unsubscribe = onSnapshot(consulta, (resultado) => {
       const lista = resultado.docs.map((documento) => ({
@@ -122,15 +95,8 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
-  // =====================================================
-  // CONSULTA DE ASSOCIADOS
-  // =====================================================
-
   useEffect(() => {
-    const consulta = query(
-      collection(db, "associados"),
-      orderBy("matricula", "asc")
-    )
+    const consulta = query(collection(db, "associados"), orderBy("matricula", "asc"))
 
     const unsubscribe = onSnapshot(consulta, (resultado) => {
       const lista = resultado.docs.map((documento) => ({
@@ -144,15 +110,8 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
-  // =====================================================
-  // CONSULTA DE PROFISSIONAIS
-  // =====================================================
-
   useEffect(() => {
-    const consulta = query(
-      collection(db, "profissionais"),
-      orderBy("nome", "asc")
-    )
+    const consulta = query(collection(db, "profissionais"), orderBy("nome", "asc"))
 
     const unsubscribe = onSnapshot(consulta, (resultado) => {
       const lista = resultado.docs.map((documento) => ({
@@ -166,15 +125,8 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
-  // =====================================================
-  // CONSULTA DE CONVÊNIOS
-  // =====================================================
-
   useEffect(() => {
-    const consulta = query(
-      collection(db, "convenios"),
-      orderBy("nome", "asc")
-    )
+    const consulta = query(collection(db, "convenios"), orderBy("nome", "asc"))
 
     const unsubscribe = onSnapshot(consulta, (resultado) => {
       const lista = resultado.docs.map((documento) => ({
@@ -187,10 +139,6 @@ export default function InicioPage() {
 
     return () => unsubscribe()
   }, [])
-
-  // =====================================================
-  // CONSULTA DE ATENDIMENTOS
-  // =====================================================
 
   useEffect(() => {
     const consulta = query(
@@ -210,10 +158,6 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
-  // =====================================================
-  // FUNÇÕES AUXILIARES DE BUSCA POR ID
-  // =====================================================
-
   function buscarPessoa(id?: string | null) {
     return pessoas.find((pessoa) => pessoa.id === id)
   }
@@ -230,10 +174,6 @@ export default function InicioPage() {
     return convenios.find((convenio) => convenio.id === id)
   }
 
-  // =====================================================
-  // DATA DO ATENDIMENTO
-  // =====================================================
-
   function dataDoAtendimento(atendimento: Atendimento) {
     if (!atendimento.data_hora_chegada?.seconds) return null
 
@@ -248,10 +188,6 @@ export default function InicioPage() {
     return data.toLocaleString("pt-BR")
   }
 
-  // =====================================================
-  // STATUS VISUAL
-  // =====================================================
-
   function nomeStatus(status: string) {
     const nomes: Record<string, string> = {
       aguardando: "Aguardando",
@@ -265,18 +201,21 @@ export default function InicioPage() {
 
   function classeStatus(status: string) {
     const classes: Record<string, string> = {
-      aguardando: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-      em_atendimento: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-      finalizado: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-      cancelado: "border-rose-500/30 bg-rose-500/10 text-rose-300"
+      aguardando:
+        "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      em_atendimento:
+        "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+      finalizado:
+        "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+      cancelado:
+        "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300"
     }
 
-    return classes[status] || "border-zinc-500/30 bg-zinc-500/10 text-zinc-300"
+    return (
+      classes[status] ||
+      "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
+    )
   }
-
-  // =====================================================
-  // LIMPAR FILTROS
-  // =====================================================
 
   function limparFiltros() {
     setDataInicial("")
@@ -288,10 +227,6 @@ export default function InicioPage() {
     setConvenioFiltro("todos")
     setPaginaAtual(1)
   }
-
-  // =====================================================
-  // FILTRO PRINCIPAL DOS ATENDIMENTOS
-  // =====================================================
 
   const atendimentosFiltrados = useMemo(() => {
     const termo = busca.toLowerCase().trim()
@@ -308,13 +243,11 @@ export default function InicioPage() {
 
       if (dataInicial) {
         const inicio = new Date(`${dataInicial}T00:00:00`)
-
         if (!data || data < inicio) return false
       }
 
       if (dataFinal) {
         const fim = new Date(`${dataFinal}T23:59:59`)
-
         if (!data || data > fim) return false
       }
 
@@ -377,10 +310,6 @@ export default function InicioPage() {
     convenioFiltro
   ])
 
-  // =====================================================
-  // PAGINAÇÃO
-  // =====================================================
-
   const totalPaginas = Math.max(
     1,
     Math.ceil(atendimentosFiltrados.length / itensPorPagina)
@@ -389,8 +318,7 @@ export default function InicioPage() {
   const inicio = (paginaAtual - 1) * itensPorPagina
   const fim = inicio + itensPorPagina
 
-  const atendimentosPaginados =
-    atendimentosFiltrados.slice(inicio, fim)
+  const atendimentosPaginados = atendimentosFiltrados.slice(inicio, fim)
 
   function alterarPagina(novaPagina: number) {
     if (novaPagina < 1 || novaPagina > totalPaginas) return
@@ -410,10 +338,6 @@ export default function InicioPage() {
     convenioFiltro
   ])
 
-  // =====================================================
-  // CONTADORES
-  // =====================================================
-
   const totalAguardando =
     atendimentosFiltrados.filter((a) => a.status === "aguardando").length
 
@@ -428,80 +352,68 @@ export default function InicioPage() {
 
   return (
     <div className="space-y-6">
-      {/* =====================================================
-          CABEÇALHO DA PÁGINA
-          ===================================================== */}
-
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           Início
         </h1>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
           Visão geral e histórico de atendimentos do sistema.
         </p>
       </div>
 
-      {/* =====================================================
-          CARDS RESUMO
-          ===================================================== */}
-
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Total filtrado</p>
-          <p className="mt-1 text-2xl font-bold text-zinc-100">
+          <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             {atendimentosFiltrados.length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Aguardando</p>
-          <p className="mt-1 text-2xl font-bold text-amber-300">
+          <p className="mt-1 text-2xl font-bold text-amber-700 dark:text-amber-300">
             {totalAguardando}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Em atendimento</p>
-          <p className="mt-1 text-2xl font-bold text-sky-300">
+          <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">
             {totalEmAtendimento}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Finalizados</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-300">
+          <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">
             {totalFinalizados}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Cancelados</p>
-          <p className="mt-1 text-2xl font-bold text-rose-300">
+          <p className="mt-1 text-2xl font-bold text-rose-700 dark:text-rose-300">
             {totalCancelados}
           </p>
         </div>
       </div>
 
-      {/* =====================================================
-          FILTROS
-          ===================================================== */}
-
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5 shadow-sm">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Filtros
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
               Refine a consulta por data, status, tipo, profissional ou convênio.
             </p>
           </div>
 
           <button
             onClick={limparFiltros}
-            className="h-10 rounded-lg border border-zinc-700 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700"
+            className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
           >
             Limpar filtros
           </button>
@@ -512,14 +424,14 @@ export default function InicioPage() {
             type="date"
             value={dataInicial}
             onChange={(e) => setDataInicial(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           />
 
           <input
             type="date"
             value={dataFinal}
             onChange={(e) => setDataFinal(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           />
 
           <input
@@ -527,13 +439,13 @@ export default function InicioPage() {
             placeholder="Buscar por nome, matrícula, observação..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 xl:col-span-2"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 xl:col-span-2"
           />
 
           <select
             value={statusFiltro}
             onChange={(e) => setStatusFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           >
             {statusOpcoes.map((status) => (
               <option key={status.valor} value={status.valor}>
@@ -545,7 +457,7 @@ export default function InicioPage() {
           <select
             value={tipoFiltro}
             onChange={(e) => setTipoFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           >
             {tiposOpcoes.map((tipo) => (
               <option key={tipo.valor} value={tipo.valor}>
@@ -557,7 +469,7 @@ export default function InicioPage() {
           <select
             value={profissionalFiltro}
             onChange={(e) => setProfissionalFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           >
             <option value="todos">Profissional: Todos</option>
 
@@ -571,7 +483,7 @@ export default function InicioPage() {
           <select
             value={convenioFiltro}
             onChange={(e) => setConvenioFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
+            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
           >
             <option value="todos">Convênio: Todos</option>
 
@@ -584,14 +496,10 @@ export default function InicioPage() {
         </div>
       </section>
 
-      {/* =====================================================
-          HISTÓRICO DE ATENDIMENTOS
-          ===================================================== */}
-
-      <section className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/80 shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-zinc-800 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-zinc-100">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Histórico de atendimentos
             </h2>
 
@@ -605,19 +513,19 @@ export default function InicioPage() {
             <button
               onClick={() => alterarPagina(paginaAtual - 1)}
               disabled={paginaAtual === 1}
-              className="h-10 rounded-lg border border-zinc-700 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
             >
               Anterior
             </button>
 
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">
               Página {paginaAtual} de {totalPaginas}
             </span>
 
             <button
               onClick={() => alterarPagina(paginaAtual + 1)}
               disabled={paginaAtual === totalPaginas}
-              className="h-10 rounded-lg border border-zinc-700 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
             >
               Próxima
             </button>
@@ -626,7 +534,7 @@ export default function InicioPage() {
 
         {atendimentosPaginados.length === 0 && (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm font-medium text-zinc-300">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Nenhum atendimento encontrado.
             </p>
 
@@ -639,41 +547,22 @@ export default function InicioPage() {
         {atendimentosPaginados.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
-              <thead className="bg-zinc-950/60 text-xs uppercase tracking-wider text-zinc-500">
+              <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500 dark:bg-zinc-950/60">
                 <tr>
-                  <th className="px-5 py-3 text-left font-semibold">
-                    Pessoa
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-semibold">
-                    Tipo / Matrícula
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-semibold">
-                    Convênio
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-semibold">
-                    Profissional
-                  </th>
-
-                  <th className="w-40 px-5 py-3 text-left font-semibold">
-                    Status
-                  </th>
-
-                  <th className="w-48 px-5 py-3 text-left font-semibold">
-                    Chegada
-                  </th>
+                  <th className="px-5 py-3 text-left font-semibold">Pessoa</th>
+                  <th className="px-5 py-3 text-left font-semibold">Tipo / Matrícula</th>
+                  <th className="px-5 py-3 text-left font-semibold">Convênio</th>
+                  <th className="px-5 py-3 text-left font-semibold">Profissional</th>
+                  <th className="w-40 px-5 py-3 text-left font-semibold">Status</th>
+                  <th className="w-48 px-5 py-3 text-left font-semibold">Chegada</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-zinc-800">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {atendimentosPaginados.map((atendimento) => {
                   const pessoa = buscarPessoa(atendimento.pessoa_id)
                   const associado = buscarAssociado(atendimento.associado_id)
-                  const profissional = buscarProfissional(
-                    atendimento.profissional_id
-                  )
+                  const profissional = buscarProfissional(atendimento.profissional_id)
                   const profissionalPreferencial = buscarProfissional(
                     atendimento.profissional_preferencial_id
                   )
@@ -682,11 +571,11 @@ export default function InicioPage() {
                   return (
                     <tr
                       key={atendimento.id}
-                      className="transition hover:bg-zinc-800/50"
+                      className="transition hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     >
                       <td className="px-5 py-3 align-middle">
                         <div>
-                          <p className="font-semibold text-zinc-100">
+                          <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                             {pessoa?.nome.toUpperCase() || "Pessoa não encontrada"}
                           </p>
 
@@ -699,7 +588,7 @@ export default function InicioPage() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-300">
+                      <td className="px-5 py-3 align-middle text-zinc-700 dark:text-zinc-300">
                         <div>
                           <p>
                             {atendimento.tipo === "associado"
@@ -715,13 +604,13 @@ export default function InicioPage() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-300">
+                      <td className="px-5 py-3 align-middle text-zinc-700 dark:text-zinc-300">
                         {convenio?.nome || "Não informado"}
                       </td>
 
                       <td className="px-5 py-3 align-middle">
                         <div>
-                          <p className="text-zinc-300">
+                          <p className="text-zinc-700 dark:text-zinc-300">
                             {profissional?.nome || "Não definido"}
                           </p>
 
@@ -743,7 +632,7 @@ export default function InicioPage() {
                         </span>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-400">
+                      <td className="px-5 py-3 align-middle text-zinc-600 dark:text-zinc-400">
                         {formatarDataHora(atendimento)}
                       </td>
                     </tr>
@@ -754,23 +643,23 @@ export default function InicioPage() {
           </div>
         )}
 
-        <div className="flex justify-end items-center gap-2 border-t border-zinc-800 px-5 py-4">
+        <div className="flex justify-end items-center gap-2 border-t border-zinc-200 px-5 py-4 dark:border-zinc-800">
           <button
             onClick={() => alterarPagina(paginaAtual - 1)}
             disabled={paginaAtual === 1}
-            className="h-10 rounded-lg border border-zinc-700 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
           >
             Anterior
           </button>
 
-          <span className="text-sm text-zinc-400">
+          <span className="text-sm text-zinc-500 dark:text-zinc-400">
             Página {paginaAtual} de {totalPaginas}
           </span>
 
           <button
             onClick={() => alterarPagina(paginaAtual + 1)}
             disabled={paginaAtual === totalPaginas}
-            className="h-10 rounded-lg border border-zinc-700 bg-zinc-800 px-4 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
           >
             Próxima
           </button>
