@@ -8,6 +8,7 @@ type BotaoProps = {
     | "secundario" 
     | "perigo" 
     | "sucesso"
+    | "info"
   className?: string
 }
 
@@ -21,8 +22,10 @@ export function Botao({
 }: BotaoProps) {
 
   const estilos = {
+
     primario:
       "bg-blue-600 hover:bg-blue-500 text-white border border-blue-500/40",
+
     secundario:
       `
         bg-white hover:bg-zinc-100
@@ -50,7 +53,17 @@ export function Botao({
         text-green-700
         hover:bg-green-500/20
         dark:text-green-300
+      `,
+
+    info:
       `
+        border-blue-500/30
+        bg-blue-500/10
+        text-blue-700
+        hover:bg-blue-500/20
+        dark:text-blue-300
+      `
+    
   }
 
   return (

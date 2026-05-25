@@ -29,6 +29,10 @@ import {
 } from "../../../lib/firebase"
 
 import { Botao } from "../../components/ui/Botao"
+import { Input } from "../../components/ui/Input"
+import { Select } from "../../components/ui/Select"
+import { BadgeStatus } from "../../components/ui/BadgeStatus"
+import { ToolbarPagina } from "../../components/ui/ToolbarPagina"
 
 // =====================================================
 // TIPO DO USUÁRIO
@@ -383,41 +387,18 @@ export default function UsuariosPage() {
       {/* =====================================================
           CABEÇALHO DA PÁGINA
           ===================================================== */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Usuários
-          </h1>
-
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cadastro e gerenciamento dos usuários do sistema.
-          </p>
-        </div>
-
-        {/* CAMPO DE PESQUISA */}
+      <ToolbarPagina
+        titulo="Usuários"
+        descricao="Cadastro e gerenciamento dos usuários do sistema."
+      >
         <div className="w-full md:w-96">
-          <input
-            type="text"
+          <Input
             placeholder="Pesquisar por nome, e-mail ou perfil"
             value={pesquisa}
-            onChange={(e) =>
-              setPesquisa(e.target.value)
-            }
-            className="
-              h-11 w-full rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              dark:border-zinc-700
-              dark:bg-zinc-900 dark:text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500 dark:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
+            onChange={(e) => setPesquisa(e.target.value)}
           />
         </div>
-
-      </div>
+      </ToolbarPagina>
 
       {/* =====================================================
           CARD DE CADASTRO
@@ -427,7 +408,7 @@ export default function UsuariosPage() {
         <div className="mb-4">
 
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            Cadastrar novo usuário
+            Cadastrar usuário
           </h2>
 
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -440,80 +421,40 @@ export default function UsuariosPage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
 
           {/* NOME */}
-          <input
-            type="text"
+          <Input
             placeholder="Nome"
             value={nome}
             onChange={(e) =>
               setNome(e.target.value)
             }
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              dark:border-zinc-700
-              dark:bg-zinc-950 dark:text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500 dark:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
           />
 
           {/* E-MAIL */}
-          <input
+          <Input
             type="email"
             placeholder="E-mail"
             value={email}
             onChange={(e) =>
               setEmail(e.target.value)
             }
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              dark:border-zinc-700
-              dark:bg-zinc-950 dark:text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500 dark:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
           />
 
           {/* SENHA */}
-          <input
+          <Input
             type="password"
             placeholder="Senha inicial"
             value={senha}
             onChange={(e) =>
               setSenha(e.target.value)
             }
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              dark:border-zinc-700
-              dark:bg-zinc-950 dark:text-zinc-100
-              outline-none transition
-              placeholder:text-zinc-500 dark:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
           />
 
           {/* PERFIL */}
-          <select
+          <Select
             value={perfil}
             onChange={(e) =>
               setPerfil(e.target.value)
             }
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              dark:border-zinc-700
-              dark:bg-zinc-950 dark:text-zinc-100
-              outline-none transition
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-            "
           >
             <option value="">
               Perfil
@@ -527,21 +468,18 @@ export default function UsuariosPage() {
                 {item}
               </option>
             ))}
-          </select>
+          </Select>
 
         </div>
 
         {/* BOTÃO */}
-        <button
+        <Botao
           onClick={adicionarUsuario}
-          className="
-            mt-4 h-11 rounded-xl border border-blue-500/40
-            bg-blue-600 px-5 text-sm font-semibold text-white
-            transition hover:bg-blue-500
-          "
+          variante="primario"
+          className="h-11 px-5 mt-4"
         >
           Adicionar usuário
-        </button>
+        </Botao>
 
       </section>
 
@@ -551,7 +489,7 @@ export default function UsuariosPage() {
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 shadow-sm">
 
         {/* TOPO DA TABELA */}
-        <div className="border-b border-zinc-800 px-5 py-4">
+        <div className="border-b border-zinc-200 dark:border-zinc-800 px-5 py-4">
 
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
             Usuários cadastrados
@@ -567,7 +505,7 @@ export default function UsuariosPage() {
         {usuariosFiltrados.length === 0 && (
           <div className="px-5 py-10 text-center">
 
-            <p className="text-sm font-medium text-zinc-300">
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Nenhum usuário encontrado.
             </p>
 
@@ -631,38 +569,21 @@ export default function UsuariosPage() {
 
                           <div className="grid grid-cols-1 gap-2">
 
-                            <input
-                              type="text"
+                            <Input
+                              placeholder="Nome"
                               value={nomeEdicao}
                               onChange={(e) =>
                                 setNomeEdicao(e.target.value)
                               }
-                              className="
-                                h-10 rounded-lg border border-zinc-300
-                                bg-white px-3 text-sm text-zinc-900
-                                dark:border-zinc-700
-                                dark:bg-zinc-950 dark:text-zinc-100
-                                outline-none transition
-                                focus:border-blue-500/60
-                                focus:ring-2 focus:ring-blue-500/20
-                              "
                             />
 
-                            <input
+                            <Input
                               type="email"
+                              placeholder="E-mail"
                               value={emailEdicao}
                               onChange={(e) =>
                                 setEmailEdicao(e.target.value)
                               }
-                              className="
-                                h-10 rounded-lg border border-zinc-300
-                                bg-white px-3 text-sm text-zinc-900
-                                dark:border-zinc-700
-                                dark:bg-zinc-950 dark:text-zinc-100
-                                outline-none transition
-                                focus:border-blue-500/60
-                                focus:ring-2 focus:ring-blue-500/20
-                              "
                             />
 
                           </div>
@@ -690,22 +611,11 @@ export default function UsuariosPage() {
 
                         {estaEditando ? (
 
-                          <select
+                          <Select
                             value={perfilEdicao}
                             onChange={(e) =>
                               setPerfilEdicao(e.target.value)
                             }
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                            "
                           >
                             <option value="">
                               Perfil
@@ -719,11 +629,11 @@ export default function UsuariosPage() {
                                 {item}
                               </option>
                             ))}
-                          </select>
+                          </Select>
 
                         ) : (
 
-                          <p className="text-zinc-300">
+                          <p className="text-zinc-700 dark:text-zinc-300">
                             {usuario.perfil}
                           </p>
 
@@ -734,20 +644,10 @@ export default function UsuariosPage() {
                       {/* COLUNA STATUS */}
                       <td className="px-5 py-3 align-middle">
 
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${usuario.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {usuario.ativo
-                            ? "Ativo"
-                            : "Inativo"}
-                        </span>
+                      {/* Status dos usuários cadastrados */}
+                      <BadgeStatus
+                        status={usuario.ativo ? "Ativo" : "Inativo"}
+                      />
 
                       </td>
 
@@ -795,26 +695,20 @@ export default function UsuariosPage() {
                               </Botao>
 
                               {/* REDEFINIR SENHA */}
-                              <button
+                              <Botao
                                 onClick={() =>
                                   redefinirSenha(usuario.email)
                                 }
                                 disabled={
                                   acaoEmAndamento === `senha_${usuario.email}`
                                 }
-                                className="
-                                  rounded-lg border border-blue-500/30
-                                  bg-blue-500/10 px-3 py-2
-                                  text-xs font-semibold text-blue-700 dark:text-blue-300
-                                  transition hover:bg-blue-500/20
-                                  disabled:cursor-not-allowed
-                                  disabled:opacity-50
-                                "
+                                variante="info"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 {acaoEmAndamento === `senha_${usuario.email}`
                                   ? "Enviando..."
                                   : "Redefinir senha"}
-                              </button>
+                              </Botao>
 
                               {/* Botão de status */}
                               {usuario.id && (

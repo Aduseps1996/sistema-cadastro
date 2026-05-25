@@ -18,6 +18,12 @@ import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 import { formatarNome } from "../../utils/formatadores"
 
+import { Botao } from "../../components/ui/Botao"
+import { Input } from "../../components/ui/Input"
+import { Select } from "../../components/ui/Select"
+import { BadgeStatus } from "../../components/ui/BadgeStatus" 
+import { ToolbarPagina } from "../../components/ui/ToolbarPagina"
+
 type Cargo = {
   id?: string
   nome: string
@@ -246,44 +252,26 @@ export default function ProfissionaisPage() {
 
   return (
     <div className="space-y-6">
+
       {/* CABEÇALHO DA PÁGINA */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Profissionais
-          </h1>
-
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cadastro dos profissionais que realizam atendimentos.
-          </p>
-        </div>
-
-        <div className="w-full md:w-80">
-          <input
-            type="text"
-            placeholder="Pesquisar por nome"
+      <ToolbarPagina
+        titulo="Profissionais"
+        descricao="Cadastro dos profissionais que realizam atendimentos."
+      >
+        <div className="w-full md:w-96">
+          <Input
+            placeholder="Pesquisar por nome do profissional"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
-            className="
-              h-11 w-full rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-900
-              dark:text-zinc-100
-              dark:placeholder:text-zinc-500
-            "
           />
         </div>
-      </div>
+      </ToolbarPagina>
 
       {/* CARD DE CADASTRO */}
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            Novo profissional
+            Cadastrar profissional
           </h2>
 
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -292,37 +280,15 @@ export default function ProfissionaisPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_260px_160px] items-center">
-          <input
-            type="text"
+          <Input
             placeholder="Nome do profissional"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-950
-              dark:text-zinc-100
-              dark:placeholder:text-zinc-500
-            "
           />
 
-          <select
+          <Select
             value={cargoId}
             onChange={(e) => setCargoId(e.target.value)}
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-950
-              dark:text-zinc-100
-            "
           >
             <option value="">Selecione o cargo</option>
 
@@ -333,22 +299,18 @@ export default function ProfissionaisPage() {
                   {cargo.nome}
                 </option>
               ))}
-          </select>
+          </Select>
 
-          <button
+          <Botao
             onClick={adicionarProfissional}
             disabled={acaoEmAndamento === "adicionar_profissional"}
-            className="
-              h-13 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            variante="primario"
+            className="h-13 flex items-center justify-center"
           >
             {acaoEmAndamento === "adicionar_profissional"
               ? "Adicionando..."
               : "Adicionar profissional"}
-          </button>
+          </Botao>
         </div>
       </section>
 
@@ -412,20 +374,10 @@ export default function ProfissionaisPage() {
                     >
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <input
-                            type="text"
+                          <Input
+                            placeholder="Nome do profissional"
                             value={nomeEdicao}
                             onChange={(e) => setNomeEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                            "
                           />
                         ) : (
                           <div>
@@ -442,19 +394,9 @@ export default function ProfissionaisPage() {
 
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <select
+                          <Select
                             value={cargoIdEdicao}
                             onChange={(e) => setCargoIdEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                            "
                           >
                             <option value="">Selecione o cargo</option>
 
@@ -469,7 +411,7 @@ export default function ProfissionaisPage() {
                                   {cargo.nome}
                                 </option>
                               ))}
-                          </select>
+                          </Select>
                         ) : (
                           <p className="text-zinc-700 dark:text-zinc-300">
                             {buscarNomeCargo(profissional.cargo_id)}
@@ -478,77 +420,50 @@ export default function ProfissionaisPage() {
                       </td>
 
                       <td className="px-5 py-3 align-middle">
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${profissional.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {profissional.ativo ? "Ativo" : "Inativo"}
-                        </span>
+                        {/* Status dos profissionais cadastrados */}
+                        <BadgeStatus
+                          status={profissional.ativo ? "ativo" : "inativo"}
+                        />
                       </td>
 
                       <td className="px-5 py-3 align-middle">
                         <div className="flex justify-end gap-2">
                           {estaEditando ? (
                             <>
-                              <button
+                              <Botao
                                 onClick={() =>
                                   salvarEdicaoProfissional(profissional.id!)
                                 }
                                 disabled={acaoEmAndamento === `salvar_${profissional.id}`}
-                                className="
-                                  rounded-lg border border-blue-500/40
-                                  bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                  transition hover:bg-blue-500
-                                  disabled:cursor-not-allowed disabled:opacity-50
-                                "
+                                variante="primario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 {acaoEmAndamento === `salvar_${profissional.id}`
                                   ? "Salvando..."
                                   : "Salvar"}
-                              </button>
+                              </Botao>
 
-                              <button
+                              <Botao
                                 onClick={cancelarEdicao}
                                 disabled={acaoEmAndamento !== ""}
-                                className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  disabled:cursor-not-allowed disabled:opacity-40
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Cancelar
-                              </button>
+                              </Botao>
                             </>
                           ) : (
                             <>
-                              <button
+                              <Botao
                                 onClick={() => iniciarEdicao(profissional)}
-                                className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Editar
-                              </button>
+                              </Botao>
 
                               {profissional.id && (
-                                <button
+                                <Botao
                                   onClick={() =>
                                     alternarStatus(
                                       profissional.id!,
@@ -556,21 +471,19 @@ export default function ProfissionaisPage() {
                                     )
                                   }
                                   disabled={acaoEmAndamento === `status_${profissional.id}`}
-                                  className={`
-                                    rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    disabled:cursor-not-allowed disabled:opacity-50
-                                    ${profissional.ativo
-                                      ? "border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
-                                      : "border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-300"
-                                    }
-                                  `}
+                                  variante={
+                                    profissional.ativo 
+                                    ? "perigo" 
+                                    : "sucesso"
+                                  }
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   {acaoEmAndamento === `status_${profissional.id}`
                                     ? "Aguarde..."
                                     : profissional.ativo
                                       ? "Inativar"
                                       : "Reativar"}
-                                </button>
+                                </Botao>
                               )}
                             </>
                           )}

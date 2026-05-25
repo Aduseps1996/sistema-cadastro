@@ -17,8 +17,11 @@ import {
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 import { formatarNome } from "../../utils/formatadores"
+
 import { Input } from "../../components/ui/Input"
 import { Botao } from "../../components/ui/Botao"
+import { BadgeStatus } from "../../components/ui/BadgeStatus"
+import { ToolbarPagina } from "../../components/ui/ToolbarPagina"
 
 // =====================================================
 // TIPO DO CARGO
@@ -289,29 +292,21 @@ export default function CargosPage() {
 
   return (
     <div className="space-y-6">
-      {/* =====================================================
-          CABEÇALHO DA PÁGINA
-          ===================================================== */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Cargos
-          </h1>
 
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cadastro de cargos e funções dos profissionais.
-          </p>
-        </div>
+      {/*CABEÇALHO DA PÁGINA*/}
 
-        {/* CAMPO DE BUSCA */}
-        <div className="w-full md:w-80">
+      <ToolbarPagina
+        titulo="Cargos"
+        descricao="Cadastro de cargos e funções dos profissionais."
+      >
+        <div className="w-full md:w-96">
           <Input
-            placeholder="Pesquisar por nome"
+            placeholder="Pesquisar por nome do cargo"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
           />
         </div>
-      </div>
+      </ToolbarPagina>
 
       {/* =====================================================
           CARD DE CADASTRO
@@ -320,7 +315,7 @@ export default function CargosPage() {
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Novo cargo
+              Cadastrar cargo
             </h2>
 
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -439,18 +434,12 @@ export default function CargosPage() {
 
                       {/* COLUNA STATUS */}
                       <td className="px-5 py-3 align-middle">
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${cargo.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-600 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {cargo.ativo ? "Ativo" : "Inativo"}
-                        </span>
+
+                        {/* Status dos cargos cadastrados */}
+                        <BadgeStatus
+                          status={cargo.ativo ? "ativo" : "inativo"}
+                        />
+                        
                       </td>
 
                       {/* COLUNA AÇÕES */}

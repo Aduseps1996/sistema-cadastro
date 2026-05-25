@@ -10,21 +10,21 @@ export function ToolbarPagina({
   children
 }: ToolbarPaginaProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
           {titulo}
         </h1>
 
         {descricao && (
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {descricao}
           </p>
         )}
       </div>
 
       {children && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="w-full md:w-auto">
           {children}
         </div>
       )}

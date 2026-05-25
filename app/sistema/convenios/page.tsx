@@ -17,6 +17,11 @@ import {
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 
+import { Botao } from "../../components/ui/Botao"
+import { Input } from "../../components/ui/Input"
+import { BadgeStatus } from "../../components/ui/BadgeStatus"
+import { ToolbarPagina } from "@/app/components/ui/ToolbarPagina"
+
 type Convenio = {
   id?: string
   nome: string
@@ -186,45 +191,26 @@ export default function ConveniosPage() {
 
   return (
     <div className="space-y-6">
+      
       {/* CABEÇALHO */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Convênios
-          </h1>
-
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cadastro de convênios e parcerias.
-          </p>
-        </div>
-
-        <div className="w-full md:w-80">
-          <input
-            type="text"
-            placeholder="Pesquisar por nome"
-            value={pesquisa}
-            onChange={(e) => setPesquisa(e.target.value)}
-            className="
-              h-11 w-full rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition
-              placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-900
-              dark:text-zinc-100
-              dark:placeholder:text-zinc-500
-            "
-          />
-        </div>
-      </div>
+      <ToolbarPagina
+          titulo="Convênios"
+          descricao="Cadastro e gerenciamento dos convênios do sistema."
+        >
+          <div className="w-full md:w-96">
+            <Input
+              placeholder="Pesquisar por nome, convênio"
+              value={pesquisa}
+              onChange={(e) => setPesquisa(e.target.value)}
+            />
+          </div>
+        </ToolbarPagina>
 
       {/* CARD DE CADASTRO */}
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="mb-4">
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            Novo convênio
+            Cadastrar convênio
           </h2>
 
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -233,39 +219,22 @@ export default function ConveniosPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_160px] items-center">
-          <input
-            type="text"
+          <Input
             placeholder="Nome do convênio"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="
-              h-11 rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition
-              placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-950
-              dark:text-zinc-100
-              dark:placeholder:text-zinc-500
-            "
           />
 
-          <button
+          <Botao
             onClick={adicionarConvenio}
             disabled={acaoEmAndamento === "adicionar_convenio"}
-            className="
-              h-13 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            variante="primario"
+            className="h-13 flex items-center justify-center"
           >
             {acaoEmAndamento === "adicionar_convenio"
               ? "Adicionando..."
               : "Adicionar convênio"}
-          </button>
+          </Botao>
         </div>
       </section>
 
@@ -326,22 +295,12 @@ export default function ConveniosPage() {
                     >
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <input
-                            type="text"
+                          <Input
+                            placeholder="Nome do convênio"
                             value={nomeEdicao}
                             onChange={(e) =>
                               setNomeEdicao(e.target.value)
                             }
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                            "
                           />
                         ) : (
                           <div>
@@ -357,95 +316,69 @@ export default function ConveniosPage() {
                       </td>
 
                       <td className="px-5 py-3 align-middle">
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${convenio.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {convenio.ativo ? "Ativo" : "Inativo"}
-                        </span>
+                        {/* Status dos convênios cadastrados */}
+                        <BadgeStatus
+                         status={convenio.ativo ? "ativo" : "inativo"}
+                        />
                       </td>
 
                       <td className="px-5 py-3 align-middle">
                         <div className="flex justify-end gap-2">
                           {estaEditando ? (
                             <>
-                              <button
+                              <Botao
                                 onClick={() =>
                                   salvarEdicaoConvenio(convenio.id!)
                                 }
-                                className="
-                                  rounded-lg border border-blue-500/40
-                                  bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                  transition hover:bg-blue-500
-                                "
+                                variante="primario"
+                                className="px-3 py-2 text-xs"
                               >
                                 Salvar
-                              </button>
+                              </Botao>
 
-                              <button
+                              <Botao
                                 onClick={cancelarEdicao}
-                                className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-3 py-2 text-xs"
                               >
                                 Cancelar
-                              </button>
+                              </Botao>
                             </>
                           ) : (
                             <>
-                              <button
+                              <Botao
                                 onClick={() => iniciarEdicao(convenio)}
-                                className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                variante="secundario"
+                                className="px-2 py-1.5 text-xs"
                               >
                                 Editar
-                              </button>
+                              </Botao>
 
                               {convenio.id && (
-                                <button
+                                <Botao
                                   onClick={() =>
                                     alternarStatus(
                                       convenio.id!,
                                       convenio.ativo
                                     )
                                   }
-                                  className={`
-                                    rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    ${convenio.ativo
-                                      ? "border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
-                                      : "border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-300"
+                                    variante={
+                                      convenio.ativo
+                                        ? "perigo"
+                                        : "sucesso"
                                     }
-                                  `}
+                                    className="px-2 py-1.5 text-xs"
                                 >
                                   {convenio.ativo
                                     ? "Inativar"
                                     : "Reativar"}
-                                </button>
+                                </Botao>
                               )}
                             </>
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </tr> 
                   )
                 })}
               </tbody>

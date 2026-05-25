@@ -23,6 +23,11 @@ import {
   formatarNome
 } from "../../utils/formatadores"
 
+import { Botao } from "../../components/ui/Botao"
+import { Input } from "../../components/ui/Input"
+import { BadgeStatus } from "../../components/ui/BadgeStatus"
+import { ToolbarPagina } from "../../components/ui/ToolbarPagina"
+
 // =====================================================
 // TIPO DA PESSOA
 // =====================================================
@@ -251,41 +256,21 @@ export default function PessoasPage() {
 
   return (
     <div className="space-y-6">
-      {/* =====================================================
-          CABEÇALHO DA PÁGINA
-          ===================================================== */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Pessoas
-          </h1>
+      {/*CABEÇALHO DA PÁGINA*/}
 
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cadastro geral de pessoas do sistema.
-          </p>
-        </div>
-
+      <ToolbarPagina
+        titulo="Pessoas"
+        descricao="Cadastro geral de pessoas do sistema."
+      >
         <div className="w-full md:w-96">
-          <input
-            type="text"
+          <Input
             placeholder="Pesquisar por nome, telefone, e-mail ou CPF"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
-            className="
-              h-11 w-full rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700
-              dark:bg-zinc-900
-              dark:text-zinc-100
-              dark:placeholder:text-zinc-500
-            "
           />
         </div>
-      </div>
+      </ToolbarPagina>
 
       {/* =====================================================
           CARD DE CADASTRO
@@ -295,7 +280,7 @@ export default function PessoasPage() {
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Nova pessoa
+              Cadastrar pessoa
             </h2>
 
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -304,93 +289,42 @@ export default function PessoasPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <input
-              type="text"
+            <Input
               placeholder="Nome"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
-              className="
-                h-11 rounded-xl border border-zinc-300
-                bg-white px-4 text-sm text-zinc-900
-                outline-none transition placeholder:text-zinc-400
-                focus:border-blue-500/60
-                focus:ring-2 focus:ring-blue-500/20
-                dark:border-zinc-700
-                dark:bg-zinc-950
-                dark:text-zinc-100
-                dark:placeholder:text-zinc-500
-              "
             />
 
-            <input
-              type="text"
+            <Input
               placeholder="Telefone"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
-              className="
-                h-11 rounded-xl border border-zinc-300
-                bg-white px-4 text-sm text-zinc-900
-                outline-none transition placeholder:text-zinc-400
-                focus:border-blue-500/60
-                focus:ring-2 focus:ring-blue-500/20
-                dark:border-zinc-700
-                dark:bg-zinc-950
-                dark:text-zinc-100
-                dark:placeholder:text-zinc-500
-              "
             />
 
-            <input
+            <Input
               type="email"
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="
-                h-11 rounded-xl border border-zinc-300
-                bg-white px-4 text-sm text-zinc-900
-                outline-none transition placeholder:text-zinc-400
-                focus:border-blue-500/60
-                focus:ring-2 focus:ring-blue-500/20
-                dark:border-zinc-700
-                dark:bg-zinc-950
-                dark:text-zinc-100
-                dark:placeholder:text-zinc-500
-              "
             />
 
-            <input
-              type="text"
+            <Input
               placeholder="CPF"
               value={cpf}
               onChange={(e) => setCpf(e.target.value)}
-              className="
-                h-11 rounded-xl border border-zinc-300
-                bg-white px-4 text-sm text-zinc-900
-                outline-none transition placeholder:text-zinc-400
-                focus:border-blue-500/60
-                focus:ring-2 focus:ring-blue-500/20
-                dark:border-zinc-700
-                dark:bg-zinc-950
-                dark:text-zinc-100
-                dark:placeholder:text-zinc-500
-              "
             />
           </div>
 
-          <button
+          <Botao
             onClick={adicionarPessoa}
             disabled={acaoEmAndamento === "adicionar_pessoa"}
-            className="
-              mt-4 h-11 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            variante="primario"
+            className="mt-4"
           >
             {acaoEmAndamento === "adicionar_pessoa"
               ? "Adicionando..."
               : "Adicionar pessoa"}
-          </button>
+          </Botao>
         </section>
       )}
 
@@ -461,20 +395,10 @@ export default function PessoasPage() {
                     >
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <input
-                            type="text"
+                          <Input
+                            placeholder="Nome"
                             value={nomeEdicao}
                             onChange={(e) => setNomeEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                            "
                           />
                         ) : (
                           <div>
@@ -492,40 +416,17 @@ export default function PessoasPage() {
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
                           <div className="grid grid-cols-1 gap-2">
-                            <input
-                              type="text"
+                            <Input
                               value={telefoneEdicao}
                               onChange={(e) => setTelefoneEdicao(e.target.value)}
                               placeholder="Telefone"
-                              className="
-                                h-10 rounded-lg border border-zinc-300
-                                bg-white px-3 text-sm text-zinc-900
-                                outline-none transition placeholder:text-zinc-400
-                                focus:border-blue-500/60
-                                focus:ring-2 focus:ring-blue-500/20
-                                dark:border-zinc-700
-                                dark:bg-zinc-950
-                                dark:text-zinc-100
-                                dark:placeholder:text-zinc-500
-                              "
                             />
 
-                            <input
+                            <Input
                               type="email"
                               value={emailEdicao}
                               onChange={(e) => setEmailEdicao(e.target.value)}
                               placeholder="E-mail"
-                              className="
-                                h-10 rounded-lg border border-zinc-300
-                                bg-white px-3 text-sm text-zinc-900
-                                outline-none transition placeholder:text-zinc-400
-                                focus:border-blue-500/60
-                                focus:ring-2 focus:ring-blue-500/20
-                                dark:border-zinc-700
-                                dark:bg-zinc-950
-                                dark:text-zinc-100
-                                dark:placeholder:text-zinc-500
-                              "
                             />
                           </div>
                         ) : (
@@ -545,22 +446,10 @@ export default function PessoasPage() {
 
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <input
-                            type="text"
+                          <Input
                             value={cpfEdicao}
                             onChange={(e) => setCpfEdicao(e.target.value)}
                             placeholder="CPF"
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition placeholder:text-zinc-400
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700
-                              dark:bg-zinc-950
-                              dark:text-zinc-100
-                              dark:placeholder:text-zinc-500
-                            "
                           />
                         ) : (
                           <p className="text-zinc-700 dark:text-zinc-300">
@@ -572,18 +461,12 @@ export default function PessoasPage() {
                       </td>
 
                       <td className="px-5 py-3 align-middle">
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${pessoa.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-500/30 bg-zinc-500/10 text-zinc-700 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {pessoa.ativo ? "Ativo" : "Inativo"}
-                        </span>
+                        
+                        {/* Status das pessoas cadastradas */}
+                        <BadgeStatus
+                          status={pessoa.ativo ? "ativo" : "inativo"}
+                        />
+                        
                       </td>
 
                       {podeGerenciar && (
@@ -591,74 +474,52 @@ export default function PessoasPage() {
                           <div className="flex flex-wrap justify-end gap-2">
                             {estaEditando ? (
                               <>
-                                <button
+                                <Botao
                                   onClick={() => salvarEdicaoPessoa(pessoa.id!)}
                                   disabled={acaoEmAndamento === `salvar_${pessoa.id}`}
-                                  className="
-                                    rounded-lg border border-blue-500/40
-                                    bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                    transition hover:bg-blue-500
-                                    disabled:cursor-not-allowed disabled:opacity-50
-                                  "
+                                  variante="primario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   {acaoEmAndamento === `salvar_${pessoa.id}`
                                     ? "Salvando..."
                                     : "Salvar"}
-                                </button>
+                                </Botao>
 
-                                <button
+                                <Botao
                                   onClick={cancelarEdicao}
-                                  className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  disabled:cursor-not-allowed disabled:opacity-40
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                  variante="secundario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   Cancelar
-                                </button>
+                                </Botao>
                               </>
                             ) : (
                               <>
-                                <button
+                                <Botao
                                   onClick={() => iniciarEdicao(pessoa)}
-                                  className="
-                                  rounded-lg border border-zinc-300
-                                  bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                  transition hover:bg-zinc-100
-                                  disabled:cursor-not-allowed disabled:opacity-40
-                                  dark:border-zinc-700
-                                  dark:bg-zinc-800
-                                  dark:text-zinc-100
-                                  dark:hover:bg-zinc-700
-                                "
+                                  variante="secundario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   Editar
-                                </button>
+                                </Botao>
 
                                 {pessoa.id && (
-                                  <button
+                                  <Botao
                                     onClick={() => alternarStatus(pessoa.id!, pessoa.ativo)}
                                     disabled={acaoEmAndamento === `status_${pessoa.id}`}
-                                    className={`
-                                    rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                    disabled:cursor-not-allowed disabled:opacity-50
-                                    ${pessoa.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
-                                        : "border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-300"
-                                      }
-                                  `}
+                                    variante={
+                                      pessoa.ativo
+                                        ? "perigo"
+                                        : "sucesso"
+                                    }
+                                    className="px-2 py-1.5 text-xs"
                                   >
                                     {acaoEmAndamento === `status_${pessoa.id}`
                                       ? "Aguarde..."
                                       : pessoa.ativo
                                         ? "Inativar"
                                         : "Reativar"}
-                                  </button>
+                                  </Botao>
                                 )}
                               </>
                             )}

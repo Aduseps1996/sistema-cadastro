@@ -17,6 +17,12 @@ import {
 import { db } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 
+import { Botao } from "../../components/ui/Botao"
+import { Input } from "../../components/ui/Input"
+import { Select } from "../../components/ui/Select"
+import { BadgeStatus } from "../../components/ui/BadgeStatus"
+import { ToolbarPagina } from "../../components/ui/ToolbarPagina"
+
 // =====================================================
 // TIPOS DAS ENTIDADES
 // =====================================================
@@ -446,38 +452,21 @@ export default function RepresentantesPage() {
 
   return (
     <div className="space-y-6">
-      {/* =====================================================
-          CABEÇALHO DA PÁGINA
-          ===================================================== */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Representantes
-          </h1>
+      {/* CABEÇALHO DA PÁGINA*/}
 
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Vínculo entre associados e seus representantes.
-          </p>
-        </div>
-
+      <ToolbarPagina
+        titulo="Representantes"
+        descricao="Vínculo entre associados e seus representantes."
+      >
         <div className="w-full md:w-96">
-          <input
-            type="text"
+          <Input
             placeholder="Pesquisar por representante, associado ou tipo"
             value={pesquisa}
             onChange={(e) => setPesquisa(e.target.value)}
-            className="
-              h-11 w-full rounded-xl border border-zinc-300
-              bg-white px-4 text-sm text-zinc-900
-              outline-none transition placeholder:text-zinc-400
-              focus:border-blue-500/60
-              focus:ring-2 focus:ring-blue-500/20
-              dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500
-            "
           />
         </div>
-      </div>
+      </ToolbarPagina>
 
       {/* =====================================================
           CARD DE CADASTRO
@@ -486,7 +475,7 @@ export default function RepresentantesPage() {
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Novo representante
+              Cadastrar representante
             </h2>
 
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -498,22 +487,13 @@ export default function RepresentantesPage() {
             {/* BUSCA DO ASSOCIADO */}
 
             <div className="relative">
-              <input
-                type="text"
+              <Input
                 placeholder="Buscar associado por nome ou matrícula"
                 value={buscaAssociado}
                 onChange={(e) => {
                   setBuscaAssociado(e.target.value)
                   setAssociadoId("")
                 }}
-                className="
-                  h-11 w-full rounded-xl border border-zinc-300
-                  bg-white px-4 text-sm text-zinc-900
-                  outline-none transition placeholder:text-zinc-400
-                  focus:border-blue-500/60
-                  focus:ring-2 focus:ring-blue-500/20
-                  dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500
-                "
               />
 
               {buscaAssociado.trim().length >= 2 && associadoId === "" && (
@@ -548,22 +528,13 @@ export default function RepresentantesPage() {
             {/* BUSCA DA PESSOA REPRESENTANTE */}
 
             <div className="relative">
-              <input
-                type="text"
+              <Input
                 placeholder="Buscar pessoa representante"
                 value={buscaPessoa}
                 onChange={(e) => {
                   setBuscaPessoa(e.target.value)
                   setPessoaId("")
-                }}
-                className="
-                  h-11 w-full rounded-xl border border-zinc-300
-                  bg-white px-4 text-sm text-zinc-900
-                  outline-none transition placeholder:text-zinc-400
-                  focus:border-blue-500/60
-                  focus:ring-2 focus:ring-blue-500/20
-                  dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500
-                "
+                }}  
               />
 
               {buscaPessoa.trim().length >= 2 && pessoaId === "" && (
@@ -597,17 +568,9 @@ export default function RepresentantesPage() {
 
             {/* TIPO DO REPRESENTANTE */}
 
-            <select
+            <Select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-              className="
-                h-11 rounded-xl border border-zinc-300
-                bg-white px-4 text-sm text-zinc-900
-                outline-none transition
-                focus:border-blue-500/60
-                focus:ring-2 focus:ring-blue-500/20
-                dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
-              "
             >
               <option value="">Tipo</option>
 
@@ -616,23 +579,19 @@ export default function RepresentantesPage() {
                   {item}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
-          <button
+          <Botao
             onClick={adicionarRepresentante}
             disabled={acaoEmAndamento === "adicionar_representante"}
-            className="
-              mt-4 h-11 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
+            variante="primario"
+            className="mt-4"
           >
             {acaoEmAndamento === "adicionar_representante"
               ? "Adicionando..."
               : "Adicionar representante"}
-          </button>
+          </Botao>
         </section>
       )}
 
@@ -703,17 +662,9 @@ export default function RepresentantesPage() {
                     >
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <select
+                          <Select
                             value={pessoaIdEdicao}
                             onChange={(e) => setPessoaIdEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
-                            "
                           >
                             <option value="">Selecione a pessoa</option>
 
@@ -728,7 +679,7 @@ export default function RepresentantesPage() {
                                   {pessoa.nome}
                                 </option>
                               ))}
-                          </select>
+                          </Select>
                         ) : (
                           <div>
                             <p className="font-semibold text-zinc-900 dark:text-zinc-100">
@@ -745,19 +696,11 @@ export default function RepresentantesPage() {
 
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <select
+                          <Select
                             value={associadoIdEdicao}
                             onChange={(e) =>
                               setAssociadoIdEdicao(e.target.value)
                             }
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
-                            "
                           >
                             <option value="">Selecione o associado</option>
 
@@ -772,7 +715,7 @@ export default function RepresentantesPage() {
                                   {buscarNomeAssociado(associado.id!)}
                                 </option>
                               ))}
-                          </select>
+                          </Select>
                         ) : (
                           <p className="text-zinc-700 dark:text-zinc-300">
                             {buscarNomeAssociado(representante.associado_id)}
@@ -782,17 +725,9 @@ export default function RepresentantesPage() {
 
                       <td className="px-5 py-3 align-middle">
                         {estaEditando ? (
-                          <select
+                          <Select
                             value={tipoEdicao}
                             onChange={(e) => setTipoEdicao(e.target.value)}
-                            className="
-                              h-10 w-full rounded-lg border border-zinc-300
-                              bg-white px-3 text-sm text-zinc-900
-                              outline-none transition
-                              focus:border-blue-500/60
-                              focus:ring-2 focus:ring-blue-500/20
-                              dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100
-                            "
                           >
                             <option value="">Tipo</option>
 
@@ -801,7 +736,7 @@ export default function RepresentantesPage() {
                                 {item}
                               </option>
                             ))}
-                          </select>
+                          </Select>
                         ) : (
                           <p className="text-zinc-700 dark:text-zinc-300">
                             {representante.tipo}
@@ -810,65 +745,48 @@ export default function RepresentantesPage() {
                       </td>
 
                       <td className="px-5 py-3 align-middle">
-                        <span
-                          className={`
-                            inline-flex items-center rounded-full border px-2.5 py-1
-                            text-xs font-semibold
-                            ${representante.ativo
-                              ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300"
-                              : "border-zinc-400/40 bg-zinc-100 text-zinc-600 dark:border-zinc-500/30 dark:bg-zinc-500/10 dark:text-zinc-300"
-                            }
-                          `}
-                        >
-                          {representante.ativo ? "Ativo" : "Inativo"}
-                        </span>
+                        
+                        {/* Status dos representantes cadastrados */}
+                        <BadgeStatus
+                          status={representante.ativo ? "ativo" : "inativo"}
+                        />
+                        
                       </td>
                       {podeGerenciar && (
                         <td className="px-5 py-3 align-middle">
                           <div className="flex flex-wrap justify-end gap-2">
                             {estaEditando ? (
                               <>
-                                <button
+                                <Botao
                                   onClick={() =>
                                     salvarEdicaoRepresentante(representante.id!)
                                   }
-                                  className="
-                                    rounded-lg border border-blue-500/40
-                                    bg-blue-600 px-3 py-2 text-xs font-semibold text-white
-                                    transition hover:bg-blue-500
-                                  "
+                                  variante="primario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   Salvar
-                                </button>
+                                </Botao>
 
-                                <button
+                                <Botao
                                   onClick={cancelarEdicao}
-                                  className="
-                                    rounded-lg border border-zinc-300
-                                    bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                    transition hover:bg-zinc-100
-                                    dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700
-                                  "
+                                  variante="secundario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   Cancelar
-                                </button>
+                                </Botao>
                               </>
                             ) : (
                               <>
-                                <button
+                                <Botao
                                   onClick={() => iniciarEdicao(representante)}
-                                  className="
-                                    rounded-lg border border-zinc-300
-                                    bg-white px-3 py-2 text-xs font-semibold text-zinc-700
-                                    transition hover:bg-zinc-100
-                                    dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700
-                                  "
+                                  variante="secundario"
+                                  className="px-2 py-1.5 text-xs"
                                 >
                                   Editar
-                                </button>
+                                </Botao>
 
                                 {representante.id && (
-                                  <button
+                                  <Botao
                                     onClick={() =>
                                       alternarStatusRepresentante(
                                         representante.id!,
@@ -876,21 +794,19 @@ export default function RepresentantesPage() {
                                       )
                                     }
                                     disabled={acaoEmAndamento === `status_${representante.id}`}
-                                    className={`
-                                      rounded-lg border px-3 py-2 text-xs font-semibold transition
-                                      disabled:cursor-not-allowed disabled:opacity-50
-                                      ${representante.ativo
-                                        ? "border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-300"
-                                        : "border-green-500/30 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:text-green-300"
-                                      }
-                                    `}
+                                    variante={
+                                    representante.ativo
+                                        ? "perigo"
+                                        : "sucesso"
+                                    }
+                                    className="px-2 py-1.5 text-xs"
                                   >
                                     {acaoEmAndamento === `status_${representante.id}`
                                       ? "Aguarde..."
                                       : representante.ativo
                                         ? "Inativar"
                                         : "Reativar"}
-                                  </button>
+                                  </Botao>
                                 )}
                               </>
                             )}
