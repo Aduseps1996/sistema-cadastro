@@ -44,6 +44,7 @@ type Usuario = {
   nome: string
   email: string
   perfil: string
+  profissional_id?: string
   ativo: boolean
 }
 

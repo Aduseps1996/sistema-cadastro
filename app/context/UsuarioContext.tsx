@@ -13,6 +13,7 @@ type UsuarioSistema = {
   email: string
   perfil: string
   ativo: boolean
+  profissional_id?: string
 }
 
 // =====================================================

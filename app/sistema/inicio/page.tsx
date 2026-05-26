@@ -11,6 +11,9 @@ import {
 
 import { db } from "../../../lib/firebase"
 
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+
 type Pessoa = {
   id?: string
   nome: string
@@ -350,6 +353,93 @@ export default function InicioPage() {
   const totalCancelados =
     atendimentosFiltrados.filter((a) => a.status === "cancelado").length
 
+
+  /* FUNÇÕES PARA EXPORTAÇÕES DOS DADOS PARA EXCEL CSV */
+  function formatarTimestampCSV(timestamp: any) {
+    if (!timestamp?.seconds) return ""
+
+    return format(
+      new Date(timestamp.seconds * 1000),
+      "dd/MM/yyyy HH:mm",
+      { locale: ptBR }
+    )
+  }
+
+  function limparCampoCSV(valor: string | undefined | null) {
+    if (!valor) return ""
+
+    return valor
+      .replace(/;/g, ",")
+      .replace(/\n/g, " ")
+      .replace(/\r/g, " ")
+  }
+
+  function exportarAtendimentosCSV() {
+    if (atendimentosFiltrados.length === 0) {
+      alert("Não há atendimentos para exportar.")
+      return
+    }
+
+    const cabecalho = [
+      "Data chegada",
+      "Pessoa",
+      "Tipo",
+      "Matrícula",
+      "Convênio",
+      "Profissional",
+      "Preferência",
+      "Status",
+      "Início atendimento",
+      "Fim atendimento",
+      "Observação",
+      "Motivo cancelamento"
+    ]
+
+    const linhas = atendimentosFiltrados.map((atendimento) => {
+      const pessoa = buscarPessoa(atendimento.pessoa_id)
+      const associado = buscarAssociado(atendimento.associado_id)
+      const profissional = buscarProfissional(atendimento.profissional_id)
+      const profissionalPreferencial = buscarProfissional(
+        atendimento.profissional_preferencial_id
+      )
+      const convenio = buscarConvenio(atendimento.convenio_id)
+
+      return [
+        formatarTimestampCSV(atendimento.data_hora_chegada),
+        limparCampoCSV(pessoa?.nome),
+        atendimento.tipo === "associado" ? "Associado" : "Não associado",
+        limparCampoCSV(associado?.matricula),
+        limparCampoCSV(convenio?.nome),
+        limparCampoCSV(profissional?.nome),
+        limparCampoCSV(profissionalPreferencial?.nome),
+        nomeStatus(atendimento.status),
+        formatarTimestampCSV(atendimento.inicio_atendimento),
+        formatarTimestampCSV(atendimento.fim_atendimento),
+        limparCampoCSV(atendimento.observacao),
+        limparCampoCSV(atendimento.motivo)
+      ].join(";")
+    })
+
+    const conteudoCSV = [
+      cabecalho.join(";"),
+      ...linhas
+    ].join("\n")
+
+    const blob = new Blob(
+      ["\uFEFF" + conteudoCSV],
+      { type: "text/csv;charset=utf-8;" }
+    )
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+
+    link.href = url
+    link.download = `atendimentos-${format(new Date(), "yyyy-MM-dd-HH-mm")}.csv`
+    link.click()
+
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -497,6 +587,7 @@ export default function InicioPage() {
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+        
         <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -508,6 +599,13 @@ export default function InicioPage() {
               {atendimentosFiltrados.length} registros filtrados.
             </p>
           </div>
+
+          <button
+            onClick={exportarAtendimentosCSV}
+            className="h-10 rounded-lg border border-blue-500/40 bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500"
+          >
+            Exportar CSV
+          </button>
 
           <div className="flex items-center gap-2">
             <button

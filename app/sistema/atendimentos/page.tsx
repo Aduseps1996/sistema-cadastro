@@ -17,6 +17,9 @@ import {
 import { db, auth } from "../../../lib/firebase"
 import { useUsuario } from "../../context/UsuarioContext"
 
+import { Select } from "../../components/ui/Select"
+import { Botao } from "../../components/ui/Botao"
+
 // =====================================================
 // TIPOS DAS ENTIDADES DO SISTEMA
 // =====================================================
@@ -146,12 +149,6 @@ export default function AtendimentosPage() {
   // ESTADOS OPERACIONAIS DA FILA
   // =====================================================
 
-  const [profissionalInicioId, setProfissionalInicioId] =
-    useState<Record<string, string>>({})
-
-  const [buscaProfissionalInicio, setBuscaProfissionalInicio] =
-    useState<Record<string, string>>({})
-
   const [usuarioLogado, setUsuarioLogado] = useState("")
   const [filtroStatus, setFiltroStatus] = useState("todos")
 
@@ -164,6 +161,9 @@ export default function AtendimentosPage() {
 
   const [motivoCancelamento, setMotivoCancelamento] =
     useState("")
+
+  const [profissionalChamadaId, setProfissionalChamadaId] = useState("")
+  const [buscaProfissionalChamada, setBuscaProfissionalChamada] = useState("")
 
   // =====================================================
   // LISTAS VINDAS DO FIRESTORE
@@ -403,6 +403,15 @@ export default function AtendimentosPage() {
       (associado) =>
         normalizarTexto(associado.matricula) ===
         normalizarTexto(matriculaInformada)
+    )
+  }
+
+  function profissionalDoUsuarioLogado() {
+    if (!usuarioSistema?.profissional_id) return null
+
+    return profissionais.find(
+      (profissional) =>
+        profissional.id === usuarioSistema.profissional_id
     )
   }
 
@@ -655,52 +664,77 @@ export default function AtendimentosPage() {
     }
   }
 
-  // =====================================================
-  // INICIAR ATENDIMENTO
-  // =====================================================
-
-  async function iniciarAtendimento(id: string) {
+  /* CHAMAR PRÓXIMO ATENDIMENTO */
+  async function chamarProximoAtendimento() {
     if (!podeOperarAtendimento) {
-      toast.error("Você não tem permissão para iniciar atendimento.")
+      toast.error("Você não tem permissão para operar a fila.")
       return
     }
 
     if (acaoEmAndamento) return
 
-    const profissionalSelecionado = profissionalInicioId[id]
+    const profissionalResponsavel =
+      usuarioSistema?.perfil === "Atendente"
+        ? usuarioSistema?.profissional_id || ""
+        : profissionalChamadaId
 
-    if (!profissionalSelecionado) {
-      toast.warning("Selecione o profissional que vai iniciar o atendimento.")
+    if (profissionalResponsavel === "") {
+      toast.warning("Selecione o profissional que vai atender.")
+      return
+    }
+
+    const filaAguardando = atendimentosOrdenados.filter(
+      (atendimento) => atendimento.status === "aguardando"
+    )
+
+    const atendimentoSelecionado = filaAguardando.find((atendimento) => {
+      const preferencia = atendimento.profissional_preferencial_id
+
+      if (
+        usuarioSistema?.perfil === "Administrador" ||
+        usuarioSistema?.perfil === "Recepção"
+      ) {
+        return true
+      }
+
+      return (
+        !preferencia ||
+        preferencia === profissionalResponsavel
+      )
+    })
+
+    if (!atendimentoSelecionado?.id) {
+      toast.warning("Nenhum atendimento compatível na fila.")
       return
     }
 
     try {
-      setAcaoEmAndamento(`iniciar_${id}`)
+      setAcaoEmAndamento("chamar_proximo")
 
-      await updateDoc(doc(db, "atendimentos", id), {
+      await updateDoc(doc(db, "atendimentos", atendimentoSelecionado.id), {
         status: "em_atendimento",
-        profissional_id: profissionalSelecionado,
+        profissional_id: profissionalResponsavel,
         inicio_atendimento: serverTimestamp(),
         atualizado_em: serverTimestamp(),
         atualizado_por: usuarioLogado
       })
 
-      await registrarHistorico(id, "atendimento_iniciado")
+      await registrarHistorico(
+        atendimentoSelecionado.id,
+        "atendimento_iniciado"
+      )
 
-      setProfissionalInicioId((estadoAtual) => {
-        const copia = { ...estadoAtual }
-        delete copia[id]
-        return copia
-      })
+      toast.success("Próximo atendimento iniciado.")
 
-      setBuscaProfissionalInicio((estadoAtual) => {
-        const copia = { ...estadoAtual }
-        delete copia[id]
-        return copia
-      })
+      if (
+        usuarioSistema?.perfil === "Administrador" ||
+        usuarioSistema?.perfil === "Recepção"
+      ) {
+        setProfissionalChamadaId("")
+      }
     } catch (error) {
       console.error(error)
-      toast.error("Erro ao iniciar atendimento. Tente novamente.")
+      toast.error("Erro ao chamar próximo atendimento.")
     } finally {
       setAcaoEmAndamento("")
     }
@@ -869,25 +903,6 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // AUTOCOMPLETE DE PROFISSIONAL PARA INICIAR ATENDIMENTO
-  // =====================================================
-
-  function profissionaisEncontradosPorAtendimento(atendimentoId: string) {
-    const termo = (buscaProfissionalInicio[atendimentoId] || "")
-      .toLowerCase()
-      .trim()
-
-    if (termo.length < 2) return []
-
-    return profissionais
-      .filter((profissional) => profissional.ativo)
-      .filter((profissional) =>
-        profissional.nome.toLowerCase().includes(termo)
-      )
-      .slice(0, 8)
-  }
-
-  // =====================================================
   // ATENDIMENTOS DO DIA
   // =====================================================
 
@@ -946,6 +961,16 @@ export default function AtendimentosPage() {
 
   const totalCancelados =
     atendimentosDoDia.filter((a) => a.status === "cancelado").length
+
+  const profissionalAutomatico = profissionalDoUsuarioLogado()
+
+  function obterNomeProfissional(id?: string | null) {
+    if (!id) return null
+
+    return profissionais.find(
+      (profissional) => profissional.id === id
+    )?.nome
+  }
 
   return (
     <div className="space-y-6">
@@ -1143,6 +1168,74 @@ export default function AtendimentosPage() {
         </section>
       )}
 
+      {/* OPERAR ATENDIMENTO / CHAMAR PRÓXIMO */}
+      {podeOperarAtendimento && (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Chamada da fila
+            </h2>
+
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Chame o próximo atendimento conforme a ordem da fila e preferência profissional.
+            </p>
+
+            {usuarioSistema?.perfil === "Atendente" && (
+              <div className="mt-4 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                  Profissional vinculado
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {profissionalAutomatico?.nome || "Nenhum profissional vinculado"}
+                </p>
+
+                {!profissionalAutomatico && (
+                  <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                    Vincule este usuário a um profissional para usar a chamada automática.
+                  </p>
+                )}
+              </div>
+            )}
+
+          </div>
+
+          <div
+            className={
+              usuarioSistema?.perfil === "Atendente"
+                ? "flex justify-end"
+                : "grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px]"
+            }
+          >
+            {usuarioSistema?.perfil !== "Atendente" && (
+              <Select
+                value={profissionalChamadaId}
+                onChange={(e) => setProfissionalChamadaId(e.target.value)}
+              >
+                <option value="">Selecione o profissional</option>
+
+                {profissionais
+                  .filter((profissional) => profissional.ativo)
+                  .map((profissional) => (
+                    <option key={profissional.id} value={profissional.id}>
+                      {profissional.nome}
+                    </option>
+                  ))}
+              </Select>
+            )}
+            <Botao
+              onClick={chamarProximoAtendimento}
+              disabled={acaoEmAndamento === "chamar_proximo"}
+              className="h-11 px-5"
+            >
+              {acaoEmAndamento === "chamar_proximo"
+                ? "Chamando..."
+                : "Chamar próximo"}
+            </Botao>
+          </div>
+        </section>
+      )}
+
       {/* =====================================================
           FILA DE ATENDIMENTOS
           ===================================================== */}
@@ -1171,8 +1264,8 @@ export default function AtendimentosPage() {
                 key={status}
                 onClick={() => setFiltroStatus(status)}
                 className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${filtroStatus === status
-                    ? "border-zinc-300 bg-blue-600 text-white dark:border-zinc-700 dark:bg-blue-600 dark:text-zinc-100"
-                    : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                  ? "border-zinc-300 bg-blue-600 text-white dark:border-zinc-700 dark:bg-blue-600 dark:text-zinc-100"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                   }`}
               >
                 {status === "todos"
@@ -1274,6 +1367,15 @@ export default function AtendimentosPage() {
                             </p>
                           )}
 
+                          {atendimento.profissional_id && (
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                              Atendendo com:
+                              <span className="ml-1 font-medium text-zinc-700 dark:text-zinc-200">
+                                {obterNomeProfissional(atendimento.profissional_id)}
+                              </span>
+                            </p>
+                          )}
+
                           {atendimento.observacao && (
                             <p className="text-zinc-700 dark:text-zinc-300">
                               Obs: {atendimento.observacao}
@@ -1327,88 +1429,6 @@ export default function AtendimentosPage() {
                   <div className="flex flex-col gap-2 lg:w-[260px]">
 
                     {podeOperarAtendimento &&
-                      atendimento.status === "aguardando" && atendimento.id && (
-                        <>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder="Profissional que vai atender"
-                              value={
-                                buscaProfissionalInicio[atendimento.id] || ""
-                              }
-                              onChange={(e) => {
-                                setBuscaProfissionalInicio((estadoAtual) => ({
-                                  ...estadoAtual,
-                                  [atendimento.id!]: e.target.value
-                                }))
-
-                                setProfissionalInicioId((estadoAtual) => ({
-                                  ...estadoAtual,
-                                  [atendimento.id!]: ""
-                                }))
-                              }}
-                              className="h-10 w-full rounded-lg border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-                            />
-
-                            {(buscaProfissionalInicio[atendimento.id] || "")
-                              .trim()
-                              .length >= 2 &&
-                              !profissionalInicioId[atendimento.id] && (
-                                <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900 shadow-2xl">
-                                  {profissionaisEncontradosPorAtendimento(
-                                    atendimento.id
-                                  ).length === 0 && (
-                                      <p className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
-                                        Nenhum profissional encontrado.
-                                      </p>
-                                    )}
-
-                                  {profissionaisEncontradosPorAtendimento(
-                                    atendimento.id
-                                  ).map((profissionalItem) => (
-                                    <button
-                                      key={profissionalItem.id}
-                                      type="button"
-                                      onClick={() => {
-                                        setProfissionalInicioId(
-                                          (estadoAtual) => ({
-                                            ...estadoAtual,
-                                            [atendimento.id!]:
-                                              profissionalItem.id || ""
-                                          })
-                                        )
-
-                                        setBuscaProfissionalInicio(
-                                          (estadoAtual) => ({
-                                            ...estadoAtual,
-                                            [atendimento.id!]:
-                                              profissionalItem.nome
-                                          })
-                                        )
-                                      }}
-                                      className="w-full px-4 py-3 text-left text-sm text-zinc-700 dark:text-zinc-200 transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                                    >
-                                      {profissionalItem.nome}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                          </div>
-
-                          <button
-                            onClick={() => iniciarAtendimento(atendimento.id!)}
-                            disabled={acaoEmAndamento === `iniciar_${atendimento.id}`}
-                            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
-                          >
-                            {acaoEmAndamento === `iniciar_${atendimento.id}`
-                              ? "Iniciando..."
-                              : "Iniciar"}
-                          </button>
-
-                        </>
-                      )}
-
-                    {podeOperarAtendimento &&
                       atendimento.status === "em_atendimento" &&
                       atendimento.id && (
                         <button
@@ -1449,8 +1469,8 @@ export default function AtendimentosPage() {
       </section>
 
       {/* =====================================================
-    MODAL DE CANCELAMENTO
-    ===================================================== */}
+      MODAL DE CANCELAMENTO
+      ===================================================== */}
       {modalCancelamentoAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
 
