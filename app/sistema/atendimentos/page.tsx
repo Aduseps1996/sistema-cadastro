@@ -11,7 +11,8 @@ import {
   query,
   orderBy,
   doc,
-  updateDoc
+  updateDoc,
+  setDoc
 } from "firebase/firestore"
 
 import { db, auth } from "../../../lib/firebase"
@@ -717,6 +718,14 @@ export default function AtendimentosPage() {
         inicio_atendimento: serverTimestamp(),
         atualizado_em: serverTimestamp(),
         atualizado_por: usuarioLogado
+      })
+
+      await setDoc(doc(db, "painel_chamadas", "atual"), {
+        atendimento_id: atendimentoSelecionado.id,
+        nome: buscarPessoa(atendimentoSelecionado.pessoa_id)?.nome || "",
+        matricula: buscarAssociado(atendimentoSelecionado.associado_id)?.matricula || "",
+        profissional: buscarProfissional(profissionalResponsavel)?.nome || "",
+        criado_em: serverTimestamp()
       })
 
       await registrarHistorico(
