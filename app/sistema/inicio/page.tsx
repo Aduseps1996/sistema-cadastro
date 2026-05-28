@@ -14,6 +14,8 @@ import { db } from "../../../lib/firebase"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
+import { FileSpreadsheet } from "lucide-react"
+
 type Pessoa = {
   id?: string
   nome: string
@@ -510,85 +512,128 @@ export default function InicioPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <input
-            type="date"
-            value={dataInicial}
-            onChange={(e) => setDataInicial(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          />
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Data inicial
+    </label>
 
-          <input
-            type="date"
-            value={dataFinal}
-            onChange={(e) => setDataFinal(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          />
+    <input
+      type="date"
+      value={dataInicial}
+      onChange={(e) => setDataInicial(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    />
+  </div>
 
-          <input
-            type="text"
-            placeholder="Buscar por nome, matrícula, observação..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 xl:col-span-2"
-          />
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Data final
+    </label>
 
-          <select
-            value={statusFiltro}
-            onChange={(e) => setStatusFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            {statusOpcoes.map((status) => (
-              <option key={status.valor} value={status.valor}>
-                Status: {status.nome}
-              </option>
-            ))}
-          </select>
+    <input
+      type="date"
+      value={dataFinal}
+      onChange={(e) => setDataFinal(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    />
+  </div>
 
-          <select
-            value={tipoFiltro}
-            onChange={(e) => setTipoFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            {tiposOpcoes.map((tipo) => (
-              <option key={tipo.valor} value={tipo.valor}>
-                Tipo: {tipo.nome}
-              </option>
-            ))}
-          </select>
+  <div className="space-y-1 md:col-span-2">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Buscar
+    </label>
 
-          <select
-            value={profissionalFiltro}
-            onChange={(e) => setProfissionalFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            <option value="todos">Profissional: Todos</option>
+    <input
+      type="text"
+      placeholder="Nome, matrícula, observação..."
+      value={busca}
+      onChange={(e) => setBusca(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+    />
+  </div>
 
-            {profissionais.map((profissional) => (
-              <option key={profissional.id} value={profissional.id}>
-                {profissional.nome}
-              </option>
-            ))}
-          </select>
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Status
+    </label>
 
-          <select
-            value={convenioFiltro}
-            onChange={(e) => setConvenioFiltro(e.target.value)}
-            className="h-11 rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-          >
-            <option value="todos">Convênio: Todos</option>
+    <select
+      value={statusFiltro}
+      onChange={(e) => setStatusFiltro(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    >
+      {statusOpcoes.map((status) => (
+        <option key={status.valor} value={status.valor}>
+          {status.nome}
+        </option>
+      ))}
+    </select>
+  </div>
 
-            {convenios.map((convenio) => (
-              <option key={convenio.id} value={convenio.id}>
-                {convenio.nome}
-              </option>
-            ))}
-          </select>
-        </div>
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Tipo
+    </label>
+
+    <select
+      value={tipoFiltro}
+      onChange={(e) => setTipoFiltro(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    >
+      {tiposOpcoes.map((tipo) => (
+        <option key={tipo.valor} value={tipo.valor}>
+          {tipo.nome}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Profissional
+    </label>
+
+    <select
+      value={profissionalFiltro}
+      onChange={(e) => setProfissionalFiltro(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    >
+      <option value="todos">Todos</option>
+
+      {profissionais.map((profissional) => (
+        <option key={profissional.id} value={profissional.id}>
+          {profissional.nome}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      Convênio
+    </label>
+
+    <select
+      value={convenioFiltro}
+      onChange={(e) => setConvenioFiltro(e.target.value)}
+      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+    >
+      <option value="todos">Todos</option>
+
+      {convenios.map((convenio) => (
+        <option key={convenio.id} value={convenio.id}>
+          {convenio.nome}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         
-        <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
               Histórico de atendimentos
@@ -600,12 +645,7 @@ export default function InicioPage() {
             </p>
           </div>
 
-          <button
-            onClick={exportarAtendimentosCSV}
-            className="h-10 rounded-lg border border-blue-500/40 bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500"
-          >
-            Exportar CSV
-          </button>
+         {/* mudar posição do botão */}
 
           <div className="flex items-center gap-2">
             <button
@@ -628,6 +668,24 @@ export default function InicioPage() {
               Próxima
             </button>
           </div>
+        </div>
+
+        <div className="flex justify-end px-5 pt-3">
+
+          <button
+            onClick={exportarAtendimentosCSV}
+            title="Exportar CSV"
+            className="
+              text-zinc-500
+              transition
+              hover:text-emerald-600
+              dark:text-zinc-400
+              dark:hover:text-emerald-400
+            "
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+          </button>
+
         </div>
 
         {atendimentosPaginados.length === 0 && (

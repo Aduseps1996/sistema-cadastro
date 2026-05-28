@@ -35,6 +35,7 @@ type Associado = {
   id?: string
   pessoa_id: string
   matricula: string
+  convenio_id?: string | null
   ativo: boolean
 }
 
@@ -82,6 +83,8 @@ type Atendimento = {
   tipo: TipoAtendimento
   status: StatusAtendimento
   motivo?: string
+  motivo_categoria?: string
+  motivo_detalhe?: string | null
   observacao?: string
   data_hora_chegada?: any
   inicio_atendimento?: any
@@ -100,6 +103,37 @@ const tiposRepresentante = [
   "Advogado",
   "Outro"
 ]
+
+const motivosAtendimento: Record<string, string[]> = {
+  Financeiro: [
+    "Pagamento",
+    "Cancelamento",
+    "Autorização",
+    "Reembolso",
+    "Cobrança"
+  ],
+
+  Jurídico: [
+    "Entrega de documentos",
+    "Informação processual",
+    "SUS",
+    "Plano de saúde",
+    "Audiência"
+  ],
+
+  Inscrição: [
+    "Inscrição simples",
+    "Inscrição + jurídico"
+  ],
+
+  "Atualização cadastral": [],
+
+  Reclamação: [],
+
+  Informação: [],
+
+  Outro: []
+}
 
 export default function AtendimentosPage() {
   // =====================================================
@@ -137,6 +171,8 @@ export default function AtendimentosPage() {
   const [nomeRepresentante, setNomeRepresentante] = useState("")
   const [tipoRepresentante, setTipoRepresentante] = useState("")
   const [profissionalPreferencialId, setProfissionalPreferencialId] = useState("")
+  const [motivoCategoria, setMotivoCategoria] = useState("")
+  const [motivoDetalhe, setMotivoDetalhe] = useState("")
   const [observacao, setObservacao] = useState("")
 
   // =====================================================
@@ -407,6 +443,24 @@ export default function AtendimentosPage() {
     )
   }
 
+  function preencherDadosPorMatricula(matriculaInformada: string) {
+    const associado =
+      buscarAssociadoPorMatricula(matriculaInformada)
+
+    if (!associado) return
+
+    const pessoa =
+      buscarPessoa(associado.pessoa_id)
+
+    if (pessoa) {
+      setNomePessoa(pessoa.nome)
+    }
+
+    if (associado.convenio_id) {
+      setConvenioId(associado.convenio_id)
+    }
+  }
+
   function profissionalDoUsuarioLogado() {
     if (!usuarioSistema?.profissional_id) return null
 
@@ -415,6 +469,7 @@ export default function AtendimentosPage() {
         profissional.id === usuarioSistema.profissional_id
     )
   }
+
 
   // =====================================================
   // CRIA OU REAPROVEITA PESSOA
@@ -480,6 +535,7 @@ export default function AtendimentosPage() {
         {
           pessoa_id,
           matricula: matriculaInformada.trim(),
+          convenio_id: convenioId || null,
           ativo: true,
           data_associacao: serverTimestamp(),
           criado_por: usuarioLogado,
@@ -597,6 +653,11 @@ export default function AtendimentosPage() {
       return
     }
 
+    if (motivoCategoria === "") {
+      toast.warning("Selecione o motivo do atendimento.")
+      return
+    }
+
     try {
       setAcaoEmAndamento("registrar_chegada")
 
@@ -635,6 +696,8 @@ export default function AtendimentosPage() {
         convenio_id: convenioSelecionadoId,
         tipo,
         status: "aguardando",
+        motivo_categoria: motivoCategoria,
+        motivo_detalhe: motivoDetalhe || null,
         observacao: observacao.trim(),
         usuario_id: usuarioLogado,
         criado_por: usuarioLogado,
@@ -654,6 +717,8 @@ export default function AtendimentosPage() {
       setNomeRepresentante("")
       setTipoRepresentante("")
       setProfissionalPreferencialId("")
+      setMotivoCategoria("")
+      setMotivoDetalhe("")
       setObservacao("")
 
       toast.success("Chegada registrada.")
@@ -1035,144 +1100,275 @@ export default function AtendimentosPage() {
           FORMULÁRIO DE NOVO ATENDIMENTO
           ===================================================== */}
       {podeRegistrarChegada && (
-        <section className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-5 shadow-sm">
-          <div className="mb-4">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+          <div className="mb-5">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-              Novo atendimento
+              Cadastrar Atendimento
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Registre a chegada da pessoa e envie para a fila de atendimento.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <select
-              value={tipo}
-              onChange={(e) => {
-                setTipo(e.target.value as TipoAtendimento)
-                setMatricula("")
-                setConvenioId("")
-              }}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="associado">Associado</option>
-              <option value="nao_associado">Não associado</option>
-            </select>
+          <div className="space-y-5">
+            <div>
+              <p className="mb-3 border-l-4 border-blue-500 pl-3 text-sm font-bold    uppercase tracking-wide text-zinc-800 dark:text-zinc-100">
+                Dados principais
+              </p>
 
-            <input
-              type="text"
-              placeholder="Nome da pessoa"
-              value={nomePessoa}
-              onChange={(e) => setNomePessoa(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                <div className="space-y-1 md:col-span-3">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Tipo de atendimento
+                  </label>
 
-            <input
-              type="text"
-              placeholder={tipo === "associado" ? "Matrícula" : "Sem matrícula"}
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
-              disabled={tipo === "nao_associado"}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            />
+                  <select
+                    value={tipo}
+                    onChange={(e) => {
+                      setTipo(e.target.value as TipoAtendimento)
+                      setMatricula("")
+                      setConvenioId("")
+                    }}
+                    className="h-11 w-full rounded-xl border border-blue-500/30 bg-blue-50 px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-blue-800 dark:bg-blue-950/20 dark:text-zinc-100"
+                  >
+                    <option value="associado">Associado</option>
+                    <option value="nao_associado">Não associado</option>
+                  </select>
+                </div>
 
-            <select
-              value={convenioId}
-              onChange={(e) => setConvenioId(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="">
-                {tipo === "associado"
-                  ? "Convênio obrigatório"
-                  : "Convênio opcional"}
-              </option>
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Matrícula
+                  </label>
 
-              {convenios
-                .filter((convenio) => convenio.ativo)
-                .map((convenio) => (
-                  <option key={convenio.id} value={convenio.id}>
-                    {convenio.nome}
-                  </option>
-                ))}
-            </select>
+                  <input
+                    type="text"
+                    placeholder={tipo === "associado" ? "Nº matrícula" : "Sem matrícula"}
+                    value={matricula}
+                    onChange={(e) => {
+                      const valor = e.target.value
+                      setMatricula(valor)
+                      preencherDadosPorMatricula(valor)
+                    }}
+                    disabled={tipo === "nao_associado"}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                  />
+                </div>
 
-            <select
-              value={usarRepresentante ? "sim" : "nao"}
-              onChange={(e) => {
-                setUsarRepresentante(e.target.value === "sim")
-                setNomeRepresentante("")
-                setTipoRepresentante("")
-              }}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="nao">Sem representante</option>
-              <option value="sim">Com representante</option>
-            </select>
+                <div className="space-y-1 md:col-span-5">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Nome da pessoa
+                  </label>
 
-            {usarRepresentante && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Nome do representante"
-                  value={nomeRepresentante}
-                  onChange={(e) => setNomeRepresentante(e.target.value)}
-                  className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-                />
+                  <input
+                    type="text"
+                    placeholder="Digite o nome"
+                    value={nomePessoa}
+                    onChange={(e) => setNomePessoa(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                  />
+                </div>
 
-                <select
-                  value={tipoRepresentante}
-                  onChange={(e) => setTipoRepresentante(e.target.value)}
-                  className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-                >
-                  <option value="">Tipo de representante</option>
 
-                  {tiposRepresentante.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                <div className="space-y-1 md:col-span-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Convênio
+                  </label>
+
+                  <select
+                    value={convenioId}
+                    onChange={(e) => setConvenioId(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">
+                      {tipo === "associado" ? "Obrigatório" : "Opcional"}
                     </option>
-                  ))}
-                </select>
-              </>
-            )}
 
-            <select
-              value={profissionalPreferencialId}
-              onChange={(e) => setProfissionalPreferencialId(e.target.value)}
-              className="h-11 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="">Sem preferência por profissional</option>
+                    {convenios
+                      .filter((convenio) => convenio.ativo)
+                      .map((convenio) => (
+                        <option key={convenio.id} value={convenio.id}>
+                          {convenio.nome}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
-              {profissionais
-                .filter((profissional) => profissional.ativo)
-                .map((profissional) => (
-                  <option key={profissional.id} value={profissional.id}>
-                    {profissional.nome}
-                  </option>
-                ))}
-            </select>
-          </div>
+            <div>
+              <p className="mb-3 border-l-4 border-blue-500 pl-3 text-sm font-bold    uppercase tracking-wide text-zinc-800 dark:text-zinc-100">
+                Representante e preferência
+              </p>
 
-          <textarea
-            placeholder="Observação / motivo do atendimento"
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-            className="mt-3 min-h-[88px] w-full resize-none rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20"
-          />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                <div className="space-y-1 md:col-span-3">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Representante
+                  </label>
 
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={registrarChegada}
-              disabled={acaoEmAndamento === "registrar_chegada"}
-              className="mt-4 h-11 rounded-xl border border-blue-500/40
-              bg-blue-600 px-5 text-sm font-semibold text-white
-              transition hover:bg-blue-500
-              disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {acaoEmAndamento === "registrar_chegada"
-                ? "Salvando..."
-                : "Salvar chegada"}
-            </button>
+                  <select
+                    value={usarRepresentante ? "sim" : "nao"}
+                    onChange={(e) => {
+                      setUsarRepresentante(e.target.value === "sim")
+                      setNomeRepresentante("")
+                      setTipoRepresentante("")
+                    }}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="nao">Sem representante</option>
+                    <option value="sim">Com representante</option>
+                  </select>
+                </div>
+
+                {usarRepresentante && (
+                  <>
+                    <div className="space-y-1 md:col-span-5">
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        Nome do representante
+                      </label>
+
+                      <input
+                        type="text"
+                        placeholder="Digite o nome"
+                        value={nomeRepresentante}
+                        onChange={(e) => setNomeRepresentante(e.target.value)}
+                        className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1 md:col-span-4">
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        Tipo de representante
+                      </label>
+
+                      <select
+                        value={tipoRepresentante}
+                        onChange={(e) => setTipoRepresentante(e.target.value)}
+                        className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                      >
+                        <option value="">Selecione</option>
+
+                        {tiposRepresentante.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-1 md:col-span-4">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Preferência profissional
+                  </label>
+
+                  <select
+                    value={profissionalPreferencialId}
+                    onChange={(e) => setProfissionalPreferencialId(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">Sem preferência</option>
+
+                    {profissionais
+                      .filter((profissional) => profissional.ativo)
+                      .map((profissional) => (
+                        <option key={profissional.id} value={profissional.id}>
+                          {profissional.nome}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-3 border-l-4 border-blue-500 pl-3 text-sm font-bold    uppercase tracking-wide text-zinc-800 dark:text-zinc-100">
+                Motivo do atendimento
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                <div className="space-y-1 md:col-span-3">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Categoria
+                  </label>
+
+                  <select
+                    value={motivoCategoria}
+                    onChange={(e) => {
+                      setMotivoCategoria(e.target.value)
+                      setMotivoDetalhe("")
+                    }}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">Selecione</option>
+
+                    {Object.keys(motivosAtendimento).map((categoria) => (
+                      <option key={categoria} value={categoria}>
+                        {categoria}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1 md:col-span-3">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Detalhe
+                  </label>
+
+                  <select
+                    value={motivoDetalhe}
+                    onChange={(e) => setMotivoDetalhe(e.target.value)}
+                    disabled={
+                      motivoCategoria === "" ||
+                      motivosAtendimento[motivoCategoria]?.length === 0
+                    }
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">
+                      {motivoCategoria === ""
+                        ? "Selecione a categoria"
+                        : motivosAtendimento[motivoCategoria]?.length === 0
+                          ? "Sem detalhe"
+                          : "Selecione"}
+                    </option>
+
+                    {(motivosAtendimento[motivoCategoria] || []).map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1 md:col-span-6">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Observação complementar
+                  </label>
+
+                  <textarea
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    placeholder="Observações adicionais"
+                    className="min-h-[88px] w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t border-zinc-200 pt-4 dark:border-zinc-800">
+              <button
+                onClick={registrarChegada}
+                disabled={acaoEmAndamento === "registrar_chegada"}
+                className="h-11 rounded-xl border border-blue-500/40 bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {acaoEmAndamento === "registrar_chegada"
+                  ? "Salvando..."
+                  : "Salvar chegada"}
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -1361,6 +1557,9 @@ export default function AtendimentosPage() {
 
                     {(pessoaRepresentante ||
                       profissionalPreferencial ||
+                      atendimento.profissional_id ||
+                      atendimento.motivo_categoria ||
+                      atendimento.motivo_detalhe ||
                       atendimento.observacao) && (
                         <div className="mt-2 space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
                           {pessoaRepresentante && representante && (
@@ -1382,6 +1581,15 @@ export default function AtendimentosPage() {
                               <span className="ml-1 font-medium text-zinc-700 dark:text-zinc-200">
                                 {obterNomeProfissional(atendimento.profissional_id)}
                               </span>
+                            </p>
+                          )}
+
+                          {atendimento.motivo_categoria && (
+                            <p>
+                              Motivo: {atendimento.motivo_categoria}
+                              {atendimento.motivo_detalhe
+                                ? ` / ${atendimento.motivo_detalhe}`
+                                : ""}
                             </p>
                           )}
 
