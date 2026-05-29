@@ -40,6 +40,13 @@ type Associado = {
   id?: string
   pessoa_id: string
   matricula: string
+  convenio_id?: string | null
+  ativo: boolean
+}
+
+type Convenio = {
+  id?: string
+  nome: string
   ativo: boolean
 }
 
@@ -49,6 +56,7 @@ export default function AssociadosPage() {
   // =====================================================
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [associados, setAssociados] = useState<Associado[]>([])
+  const [convenios, setConvenios] = useState<Convenio[]>([])
 
   // =====================================================
   // ESTADOS DO CADASTRO
@@ -56,6 +64,8 @@ export default function AssociadosPage() {
   const [pessoaId, setPessoaId] = useState("")
   const [matricula, setMatricula] = useState("")
   const [buscaPessoa, setBuscaPessoa] = useState("")
+  const [convenioId, setConvenioId] = useState("")
+  const [convenioIdEdicao, setConvenioIdEdicao] = useState("")
 
   // =====================================================
   // ESTADO DA PESQUISA DA TABELA
@@ -134,6 +144,31 @@ export default function AssociadosPage() {
     return () => unsubscribeAssociados()
   }, [])
 
+  //======================
+  //  BUSCAR CONVÊNIO
+  //======================
+
+  useEffect(() => {
+    const consultaConvenios = query(
+      collection(db, "convenios"),
+      orderBy("nome", "asc")
+    )
+
+    const unsubscribeConvenios = onSnapshot(
+      consultaConvenios,
+      (resultado) => {
+        const lista = resultado.docs.map((documento) => ({
+          id: documento.id,
+          ...documento.data()
+        })) as Convenio[]
+
+        setConvenios(lista)
+      }
+    )
+
+    return () => unsubscribeConvenios()
+  }, [])
+
   // =====================================================
   // ADICIONAR ASSOCIADO
   // =====================================================
@@ -182,6 +217,7 @@ export default function AssociadosPage() {
       await addDoc(collection(db, "associados"), {
         pessoa_id: pessoaId,
         matricula: matriculaFormatada,
+        convenio_id: convenioId || null,
         ativo: true,
         data_associacao: serverTimestamp(),
         criado_em: serverTimestamp(),
@@ -191,6 +227,7 @@ export default function AssociadosPage() {
       setPessoaId("")
       setMatricula("")
       setBuscaPessoa("")
+      setConvenioId("")
 
       toast.success("Associado cadastrado.")
     } catch (error) {
@@ -249,6 +286,7 @@ export default function AssociadosPage() {
       await updateDoc(doc(db, "associados", id), {
         pessoa_id: pessoaIdEdicao,
         matricula: matriculaFormatada,
+        convenio_id: convenioIdEdicao || null,
         atualizado_em: serverTimestamp()
       })
 
@@ -310,12 +348,14 @@ export default function AssociadosPage() {
     setEditandoId(associado.id || "")
     setPessoaIdEdicao(associado.pessoa_id)
     setMatriculaEdicao(associado.matricula)
+    setConvenioIdEdicao(associado.convenio_id || "")
   }
 
   function cancelarEdicao() {
     setEditandoId("")
     setPessoaIdEdicao("")
     setMatriculaEdicao("")
+    setConvenioIdEdicao("")
 
     toast.success("Edição cancelada.")
   }
@@ -327,6 +367,12 @@ export default function AssociadosPage() {
   function buscarPessoa(pessoa_id: string) {
     return pessoas.find((item) => item.id === pessoa_id)
   }
+
+  function buscarConvenio(convenio_id?: string | null) {
+  return convenios.find(
+    (item) => item.id === convenio_id
+  )
+}
 
   function buscarNomePessoa(pessoa_id: string) {
     return buscarPessoa(pessoa_id)?.nome || "Pessoa não encontrada"
@@ -395,7 +441,7 @@ export default function AssociadosPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px_280px]">
             {/* BUSCA DA PESSOA */}
 
             <div className="relative">
@@ -444,6 +490,21 @@ export default function AssociadosPage() {
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
             />
+
+            <Select
+              value={convenioId}
+              onChange={(e) => setConvenioId(e.target.value)}
+            >
+              <option value="">Selecione o convênio</option>
+
+              {convenios
+                .filter((convenio) => convenio.ativo)
+                .map((convenio) => (
+                  <option key={convenio.id} value={convenio.id}>
+                    {convenio.nome}
+                  </option>
+                ))}
+            </Select>
           </div>
 
           <Botao
@@ -497,6 +558,10 @@ export default function AssociadosPage() {
 
                   <th className="w-40 px-5 py-3 text-left font-semibold">
                     Matrícula
+                  </th>
+
+                  <th className="w-52 px-5 py-3 text-left font-semibold">
+                    Convênio
                   </th>
 
                   <th className="w-32 px-5 py-3 text-left font-semibold">
@@ -565,6 +630,35 @@ export default function AssociadosPage() {
                         ) : (
                           <p className="text-zinc-700 dark:text-zinc-300">
                             {associado.matricula}
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="px-5 py-3 align-middle">
+                        {estaEditando ? (
+                          <Select
+                            value={convenioIdEdicao}
+                            onChange={(e) =>
+                              setConvenioIdEdicao(e.target.value)
+                            }
+                          >
+                            <option value="">Sem convênio</option>
+
+                            {convenios
+                              .filter((convenio) => convenio.ativo)
+                              .map((convenio) => (
+                                <option
+                                  key={convenio.id}
+                                  value={convenio.id}
+                                >
+                                  {convenio.nome}
+                                </option>
+                              ))}
+                          </Select>
+                        ) : (
+                          <p className="text-zinc-700 dark:text-zinc-300">
+                            {buscarConvenio(associado.convenio_id)?.nome ||
+                              "Não informado"}
                           </p>
                         )}
                       </td>

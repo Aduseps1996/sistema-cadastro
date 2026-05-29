@@ -92,7 +92,7 @@ export default function InicioPage() {
   const [convenioFiltro, setConvenioFiltro] = useState("todos")
 
   const [paginaAtual, setPaginaAtual] = useState(1)
-  const itensPorPagina = 50
+  const itensPorPagina = 30
 
   /* Modal do Inicio */
   const { usuarioSistema } = useUsuario()
