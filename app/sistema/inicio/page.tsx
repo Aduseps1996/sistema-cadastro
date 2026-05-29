@@ -52,6 +52,7 @@ type Atendimento = {
   tipo: "associado" | "nao_associado"
   status: "aguardando" | "em_atendimento" | "finalizado" | "cancelado"
   observacao?: string
+  observacao_encerramento?: string
   motivo?: string
   motivo_categoria?: string
   motivo_detalhe?: string | null
@@ -1148,6 +1149,18 @@ export default function InicioPage() {
                   </p>
                 )}
               </div>
+
+              {atendimentoSelecionado.observacao_encerramento && (
+                <div>
+                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    Encerramento posterior
+                  </p>
+
+                  <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                    {atendimentoSelecionado.observacao_encerramento}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
