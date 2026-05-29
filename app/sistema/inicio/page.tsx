@@ -6,14 +6,19 @@ import {
   collection,
   onSnapshot,
   orderBy,
-  query
+  query,
+  doc,
+  updateDoc,
+  serverTimestamp
 } from "firebase/firestore"
 
 import { db } from "../../../lib/firebase"
+import { useUsuario } from "../../context/UsuarioContext"
 
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
+// Tipos de dados usados na página
 import { FileSpreadsheet } from "lucide-react"
 
 type Pessoa = {
@@ -48,6 +53,8 @@ type Atendimento = {
   status: "aguardando" | "em_atendimento" | "finalizado" | "cancelado"
   observacao?: string
   motivo?: string
+  motivo_categoria?: string
+  motivo_detalhe?: string | null
   data_hora_chegada?: any
   inicio_atendimento?: any
   fim_atendimento?: any
@@ -68,6 +75,7 @@ const tiposOpcoes = [
 ]
 
 export default function InicioPage() {
+  /* Estados de dados */
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
   const [associados, setAssociados] = useState<Associado[]>([])
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
@@ -85,6 +93,25 @@ export default function InicioPage() {
   const [paginaAtual, setPaginaAtual] = useState(1)
   const itensPorPagina = 50
 
+  /* Modal do Inicio */
+  const { usuarioSistema } = useUsuario()
+
+  const podeEditarHistorico =
+    usuarioSistema?.perfil === "Administrador" ||
+    usuarioSistema?.perfil === "Recepção"
+
+  const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false)
+  const [modoEdicao, setModoEdicao] = useState(false)
+  const [atendimentoSelecionado, setAtendimentoSelecionado] =
+    useState<Atendimento | null>(null)
+
+  const [editConvenioId, setEditConvenioId] = useState("")
+  const [editProfissionalPreferencialId, setEditProfissionalPreferencialId] =
+    useState("")
+  const [editObservacao, setEditObservacao] = useState("")
+  /* Fim modal */
+
+  /* Carregar pessoas */
   useEffect(() => {
     const consulta = query(collection(db, "pessoas"), orderBy("nome", "asc"))
 
@@ -100,6 +127,7 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
+  /* Carregar associados */
   useEffect(() => {
     const consulta = query(collection(db, "associados"), orderBy("matricula", "asc"))
 
@@ -115,6 +143,7 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
+  /* Carregar profissionais */
   useEffect(() => {
     const consulta = query(collection(db, "profissionais"), orderBy("nome", "asc"))
 
@@ -130,6 +159,7 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
+  /* Carregar convênios */
   useEffect(() => {
     const consulta = query(collection(db, "convenios"), orderBy("nome", "asc"))
 
@@ -145,6 +175,7 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
+  /* Carregar atendimentos */
   useEffect(() => {
     const consulta = query(
       collection(db, "atendimentos"),
@@ -163,6 +194,7 @@ export default function InicioPage() {
     return () => unsubscribe()
   }, [])
 
+  /* Funções de busca de relacionamentos */
   function buscarPessoa(id?: string | null) {
     return pessoas.find((pessoa) => pessoa.id === id)
   }
@@ -179,6 +211,7 @@ export default function InicioPage() {
     return convenios.find((convenio) => convenio.id === id)
   }
 
+  /* Funções de formatação e datas */
   function dataDoAtendimento(atendimento: Atendimento) {
     if (!atendimento.data_hora_chegada?.seconds) return null
 
@@ -193,6 +226,7 @@ export default function InicioPage() {
     return data.toLocaleString("pt-BR")
   }
 
+  /* Funções de status visual */
   function nomeStatus(status: string) {
     const nomes: Record<string, string> = {
       aguardando: "Aguardando",
@@ -222,6 +256,7 @@ export default function InicioPage() {
     )
   }
 
+  /* Função de limpeza de filtros */
   function limparFiltros() {
     setDataInicial("")
     setDataFinal("")
@@ -233,6 +268,7 @@ export default function InicioPage() {
     setPaginaAtual(1)
   }
 
+  /* Cálculo de atendimentos filtrados */
   const atendimentosFiltrados = useMemo(() => {
     const termo = busca.toLowerCase().trim()
 
@@ -315,6 +351,7 @@ export default function InicioPage() {
     convenioFiltro
   ])
 
+  /* Paginação dos resultados */
   const totalPaginas = Math.max(
     1,
     Math.ceil(atendimentosFiltrados.length / itensPorPagina)
@@ -331,6 +368,7 @@ export default function InicioPage() {
     setPaginaAtual(novaPagina)
   }
 
+  /* Resetar página sempre que filtros mudarem */
   useEffect(() => {
     setPaginaAtual(1)
   }, [
@@ -343,6 +381,7 @@ export default function InicioPage() {
     convenioFiltro
   ])
 
+  /* Totais por status para o painel */
   const totalAguardando =
     atendimentosFiltrados.filter((a) => a.status === "aguardando").length
 
@@ -356,7 +395,7 @@ export default function InicioPage() {
     atendimentosFiltrados.filter((a) => a.status === "cancelado").length
 
 
-  /* FUNÇÕES PARA EXPORTAÇÕES DOS DADOS PARA EXCEL CSV */
+  /* Exportação de dados CSV */
   function formatarTimestampCSV(timestamp: any) {
     if (!timestamp?.seconds) return ""
 
@@ -442,6 +481,68 @@ export default function InicioPage() {
     URL.revokeObjectURL(url)
   }
 
+  /* Funções ligas ao modal inicio */
+  function abrirDetalhesAtendimento(atendimento: Atendimento) {
+    setAtendimentoSelecionado(atendimento)
+    setEditConvenioId(atendimento.convenio_id || "")
+    setEditProfissionalPreferencialId(
+      atendimento.profissional_preferencial_id || ""
+    )
+    setEditObservacao(atendimento.observacao || "")
+    setModoEdicao(false)
+    setModalDetalhesAberto(true)
+  }
+
+  function fecharDetalhesAtendimento() {
+    setModalDetalhesAberto(false)
+    setModoEdicao(false)
+    setAtendimentoSelecionado(null)
+  }
+
+  function calcularTempoAtendimento(atendimento: Atendimento | null) {
+    if (!atendimento?.inicio_atendimento?.seconds) return "-"
+
+    const inicio = atendimento.inicio_atendimento.seconds * 1000
+    const fim = atendimento.fim_atendimento?.seconds
+      ? atendimento.fim_atendimento.seconds * 1000
+      : new Date().getTime()
+
+    const minutosTotais = Math.floor((fim - inicio) / 1000 / 60)
+
+    if (minutosTotais < 1) return "Agora"
+    if (minutosTotais < 60) return `${minutosTotais} min`
+
+    const horas = Math.floor(minutosTotais / 60)
+    const minutos = minutosTotais % 60
+
+    return `${horas}h ${minutos}min`
+  }
+
+  function formatarTimestamp(timestamp: any) {
+    if (!timestamp?.seconds) return "-"
+
+    return format(
+      new Date(timestamp.seconds * 1000),
+      "dd/MM/yyyy HH:mm",
+      { locale: ptBR }
+    )
+  }
+
+  async function salvarEdicaoAtendimento() {
+    if (!atendimentoSelecionado?.id) return
+
+    await updateDoc(doc(db, "atendimentos", atendimentoSelecionado.id), {
+      convenio_id: editConvenioId || null,
+      profissional_preferencial_id: editProfissionalPreferencialId || null,
+      observacao: editObservacao.trim(),
+      atualizado_em: serverTimestamp()
+    })
+
+    setModoEdicao(false)
+  }
+
+  /* Fim das funções ligadas ao modal */
+
   return (
     <div className="space-y-6">
       <div>
@@ -454,6 +555,7 @@ export default function InicioPage() {
         </p>
       </div>
 
+      {/* Painel resumo */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <p className="text-xs font-medium text-zinc-500">Total filtrado</p>
@@ -491,6 +593,7 @@ export default function InicioPage() {
         </div>
       </div>
 
+      {/* Bloco de filtros */}
       <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -512,127 +615,168 @@ export default function InicioPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Data inicial
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Data inicial
+            </label>
 
-    <input
-      type="date"
-      value={dataInicial}
-      onChange={(e) => setDataInicial(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    />
-  </div>
+            <input
+              type="text"
+              placeholder="dd/mm/aaaa"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+              onFocus={(e) => {
+                e.currentTarget.type = "date"
+                e.currentTarget.showPicker?.()
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.value) {
+                  e.currentTarget.type = "text"
+                }
+              }}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
 
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Data final
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Data final
+            </label>
 
-    <input
-      type="date"
-      value={dataFinal}
-      onChange={(e) => setDataFinal(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    />
-  </div>
+            <input
+              type="text"
+              placeholder="dd/mm/aaaa"
+              value={dataFinal}
+              onChange={(e) => setDataFinal(e.target.value)}
+              onFocus={(e) => {
+                e.currentTarget.type = "date"
+                e.currentTarget.showPicker?.()
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.value) {
+                  e.currentTarget.type = "text"
+                }
+              }}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            />
+          </div>
 
-  <div className="space-y-1 md:col-span-2">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Buscar
-    </label>
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Buscar
+            </label>
 
-    <input
-      type="text"
-      placeholder="Nome, matrícula, observação..."
-      value={busca}
-      onChange={(e) => setBusca(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-    />
-  </div>
+            <input
+              type="text"
+              placeholder="Nome, matrícula, observação..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            />
+          </div>
 
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Status
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Status
+            </label>
 
-    <select
-      value={statusFiltro}
-      onChange={(e) => setStatusFiltro(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    >
-      {statusOpcoes.map((status) => (
-        <option key={status.valor} value={status.valor}>
-          {status.nome}
-        </option>
-      ))}
-    </select>
-  </div>
+            <select
+              value={statusFiltro}
+              onChange={(e) => setStatusFiltro(e.target.value)}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            >
+              {statusOpcoes.map((status) => (
+                <option key={status.valor} value={status.valor}>
+                  {status.nome}
+                </option>
+              ))}
+            </select>
+          </div>
 
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Tipo
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Tipo
+            </label>
 
-    <select
-      value={tipoFiltro}
-      onChange={(e) => setTipoFiltro(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    >
-      {tiposOpcoes.map((tipo) => (
-        <option key={tipo.valor} value={tipo.valor}>
-          {tipo.nome}
-        </option>
-      ))}
-    </select>
-  </div>
+            <select
+              value={tipoFiltro}
+              onChange={(e) => setTipoFiltro(e.target.value)}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            >
+              {tiposOpcoes.map((tipo) => (
+                <option key={tipo.valor} value={tipo.valor}>
+                  {tipo.nome}
+                </option>
+              ))}
+            </select>
+          </div>
 
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Profissional
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Profissional
+            </label>
 
-    <select
-      value={profissionalFiltro}
-      onChange={(e) => setProfissionalFiltro(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    >
-      <option value="todos">Todos</option>
+            <select
+              value={profissionalFiltro}
+              onChange={(e) => setProfissionalFiltro(e.target.value)}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            >
+              <option value="todos">Todos</option>
 
-      {profissionais.map((profissional) => (
-        <option key={profissional.id} value={profissional.id}>
-          {profissional.nome}
-        </option>
-      ))}
-    </select>
-  </div>
+              {profissionais.map((profissional) => (
+                <option key={profissional.id} value={profissional.id}>
+                  {profissional.nome}
+                </option>
+              ))}
+            </select>
+          </div>
 
-  <div className="space-y-1">
-    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-      Convênio
-    </label>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Convênio
+            </label>
 
-    <select
-      value={convenioFiltro}
-      onChange={(e) => setConvenioFiltro(e.target.value)}
-      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-    >
-      <option value="todos">Todos</option>
+            <select
+              value={convenioFiltro}
+              onChange={(e) => setConvenioFiltro(e.target.value)}
+              className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+            >
+              <option value="todos">Todos</option>
 
-      {convenios.map((convenio) => (
-        <option key={convenio.id} value={convenio.id}>
-          {convenio.nome}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+              {convenios.map((convenio) => (
+                <option key={convenio.id} value={convenio.id}>
+                  {convenio.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
       </section>
 
+      {/* Botão de exportação CSV */}
+      <div className="flex justify-end">
+        <button
+          onClick={exportarAtendimentosCSV}
+          title="Exportar CSV"
+          className="
+            inline-flex items-center gap-2
+            text-sm font-semibold
+            text-zinc-500
+            transition
+            hover:text-emerald-600
+            dark:text-zinc-400
+            dark:hover:text-emerald-400
+          "
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+          {/* <span>Exportar CSV</span> */}
+        </button>
+      </div>
+
+      {/* Histórico de atendimentos */}
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
-        
+
         <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -644,8 +788,6 @@ export default function InicioPage() {
               {atendimentosFiltrados.length} registros filtrados.
             </p>
           </div>
-
-         {/* mudar posição do botão */}
 
           <div className="flex items-center gap-2">
             <button
@@ -668,24 +810,6 @@ export default function InicioPage() {
               Próxima
             </button>
           </div>
-        </div>
-
-        <div className="flex justify-end px-5 pt-3">
-
-          <button
-            onClick={exportarAtendimentosCSV}
-            title="Exportar CSV"
-            className="
-              text-zinc-500
-              transition
-              hover:text-emerald-600
-              dark:text-zinc-400
-              dark:hover:text-emerald-400
-            "
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-          </button>
-
         </div>
 
         {atendimentosPaginados.length === 0 && (
@@ -731,9 +855,13 @@ export default function InicioPage() {
                     >
                       <td className="px-5 py-3 align-middle">
                         <div>
-                          <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          <button
+                            type="button"
+                            onClick={() => abrirDetalhesAtendimento(atendimento)}
+                            className="text-left font-semibold text-zinc-900 underline-offset-4 transition hover:text-blue-700 hover:underline dark:text-zinc-100 dark:hover:text-blue-300"
+                          >
                             {pessoa?.nome.toUpperCase() || "Pessoa não encontrada"}
-                          </p>
+                          </button>
 
                           {(atendimento.observacao || atendimento.motivo) && (
                             <p className="mt-0.5 max-w-[360px] truncate text-xs text-zinc-500">
@@ -821,6 +949,251 @@ export default function InicioPage() {
           </button>
         </div>
       </section>
+
+      {/* Modal de detalhes */}
+      {modalDetalhesAberto && atendimentoSelecionado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-3xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                  Detalhes do atendimento
+                </h2>
+
+                <p className="mt-1 text-sm text-zinc-500">
+                  Consulte as informações completas do atendimento.
+                </p>
+              </div>
+
+              <span
+                className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${classeStatus(
+                  atendimentoSelecionado.status
+                )}`}
+              >
+                {nomeStatus(atendimentoSelecionado.status)}
+              </span>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Pessoa
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {buscarPessoa(atendimentoSelecionado.pessoa_id)?.nome || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Matrícula
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {buscarAssociado(atendimentoSelecionado.associado_id)?.matricula ||
+                    "Sem matrícula"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Convênio
+                </p>
+
+                {modoEdicao ? (
+                  <select
+                    value={editConvenioId}
+                    onChange={(e) => setEditConvenioId(e.target.value)}
+                    className="mt-1 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">Não informado</option>
+
+                    {convenios.map((convenio) => (
+                      <option key={convenio.id} value={convenio.id}>
+                        {convenio.nome}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                    {buscarConvenio(atendimentoSelecionado.convenio_id)?.nome ||
+                      "Não informado"}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Profissional preferencial
+                </p>
+
+                {modoEdicao ? (
+                  <select
+                    value={editProfissionalPreferencialId}
+                    onChange={(e) =>
+                      setEditProfissionalPreferencialId(e.target.value)
+                    }
+                    className="mt-1 h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">Sem preferência</option>
+
+                    {profissionais.map((profissional) => (
+                      <option key={profissional.id} value={profissional.id}>
+                        {profissional.nome}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                    {buscarProfissional(
+                      atendimentoSelecionado.profissional_preferencial_id
+                    )?.nome || "Sem preferência"}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Profissional responsável
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {buscarProfissional(atendimentoSelecionado.profissional_id)?.nome ||
+                    "Não definido"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Tipo
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {atendimentoSelecionado.tipo === "associado"
+                    ? "Associado"
+                    : "Não associado"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Motivo
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {atendimentoSelecionado.motivo_categoria || "-"}
+                  {atendimentoSelecionado.motivo_detalhe
+                    ? ` / ${atendimentoSelecionado.motivo_detalhe}`
+                    : ""}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Tempo de atendimento
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {calcularTempoAtendimento(atendimentoSelecionado)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Chegada
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {formatarTimestamp(atendimentoSelecionado.data_hora_chegada)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Início
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {formatarTimestamp(atendimentoSelecionado.inicio_atendimento)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Fim
+                </p>
+                <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                  {formatarTimestamp(atendimentoSelecionado.fim_atendimento)}
+                </p>
+              </div>
+
+              {atendimentoSelecionado.motivo && (
+                <div>
+                  <p className="text-xs font-semibold uppercase text-zinc-500">
+                    Motivo do cancelamento
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                    {atendimentoSelecionado.motivo}
+                  </p>
+                </div>
+              )}
+
+              <div className="md:col-span-2">
+                <p className="text-xs font-semibold uppercase text-zinc-500">
+                  Observação
+                </p>
+
+                {modoEdicao ? (
+                  <textarea
+                    value={editObservacao}
+                    onChange={(e) => setEditObservacao(e.target.value)}
+                    className="mt-1 min-h-[100px] w-full resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                  />
+                ) : (
+                  <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
+                    {atendimentoSelecionado.observacao || "-"}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={fecharDetalhesAtendimento}
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              >
+                Fechar
+              </button>
+
+              {podeEditarHistorico && !modoEdicao && (
+                <button
+                  type="button"
+                  onClick={() => setModoEdicao(true)}
+                  className="h-10 rounded-lg border border-blue-500/40 bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500"
+                >
+                  Editar
+                </button>
+              )}
+
+              {podeEditarHistorico && modoEdicao && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setModoEdicao(false)}
+                    className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={salvarEdicaoAtendimento}
+                    className="h-10 rounded-lg border border-blue-500/40 bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-500"
+                  >
+                    Salvar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Fim modal inicio */}
+
     </div>
   )
 }
