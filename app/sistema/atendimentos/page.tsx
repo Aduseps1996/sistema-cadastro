@@ -786,6 +786,7 @@ export default function AtendimentosPage() {
       })
 
       await setDoc(doc(db, "painel_chamadas", "atual"), {
+        ativo: true,
         atendimento_id: atendimentoSelecionado.id,
         nome: buscarPessoa(atendimentoSelecionado.pessoa_id)?.nome || "",
         matricula: buscarAssociado(atendimentoSelecionado.associado_id)?.matricula || "",
