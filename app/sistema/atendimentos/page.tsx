@@ -22,7 +22,7 @@ import { Select } from "../../components/ui/Select"
 import { Botao } from "../../components/ui/Botao"
 
 // =====================================================
-// TIPOS DAS ENTIDADES DO SISTEMA
+// TIPOS DAS ENTIDADES
 // =====================================================
 
 type Pessoa = {
@@ -61,7 +61,7 @@ type Convenio = {
 }
 
 // =====================================================
-// TIPOS DO ATENDIMENTO
+// TIPOS E STATUS DE ATENDIMENTO
 // =====================================================
 
 type StatusAtendimento =
@@ -137,13 +137,13 @@ const motivosAtendimento: Record<string, string[]> = {
 
 export default function AtendimentosPage() {
   // =====================================================
-  // ESTADOS DO FORMULÁRIO DE NOVO ATENDIMENTO
+  // FORMULÁRIO DE CHEGADA E INFORMAÇÕES DE CONTEXTO
   // =====================================================
 
   const { usuarioSistema } = useUsuario()
 
   // =====================================================
-  // CONTROLE DE PERMISSÃO
+  // PERMISSÕES DE AÇÃO
   // =====================================================
 
   // Apenas Administrador e Recepção podem
@@ -159,9 +159,9 @@ export default function AtendimentosPage() {
     usuarioSistema?.perfil === "Recepção" ||
     usuarioSistema?.perfil === "Atendente"
 
-  // =========================================
-  // RESTO DOS STATES
-  // =========================================
+  // =====================================================
+  // ESTADOS DO FORMULÁRIO E CONTROLES DO USUÁRIO
+  // =====================================================
 
   const [tipo, setTipo] = useState<TipoAtendimento>("associado")
   const [nomePessoa, setNomePessoa] = useState("")
@@ -176,34 +176,40 @@ export default function AtendimentosPage() {
   const [observacao, setObservacao] = useState("")
 
   // =====================================================
-  // ESTADO DE PROCESSAMENTO DAS AÇÕES
+  // INDICADOR DE AÇÃO EM ANDAMENTO
   // =====================================================
-  // Guarda qual ação está em andamento.
-  // Evita clique duplo e dá feedback visual ao usuário.
+  // Guarda qual ação está em andamento. Evita clique duplo e dá feedback visual.
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
   // =====================================================
-  // ESTADOS OPERACIONAIS DA FILA
+  // CONTROLE OPERACIONAL DA FILA
   // =====================================================
 
   const [usuarioLogado, setUsuarioLogado] = useState("")
   const [filtroStatus, setFiltroStatus] = useState("todos")
 
 
+  // =====================================================
+  // MODAIS E ESTADOS DE PENDÊNCIAS
+  // =====================================================
   const [modalCancelamentoAberto, setModalCancelamentoAberto] =
     useState(false)
-
   const [atendimentoCancelandoId, setAtendimentoCancelandoId] =
     useState("")
-
   const [motivoCancelamento, setMotivoCancelamento] =
     useState("")
+  const [modalPendenciaAberto, setModalPendenciaAberto] = useState(false)
+  const [atendimentoPendenteId, setAtendimentoPendenteId] = useState("")
+  const [observacaoPendencia, setObservacaoPendencia] = useState("")
 
+  // =====================================================
+  // ESTADOS DE CHAMADA DE PROFISSIONAL
+  // =====================================================
   const [profissionalChamadaId, setProfissionalChamadaId] = useState("")
   const [buscaProfissionalChamada, setBuscaProfissionalChamada] = useState("")
 
   // =====================================================
-  // LISTAS VINDAS DO FIRESTORE
+  // ESTADOS DE DADOS CARREGADOS DO FIRESTORE
   // =====================================================
 
   const [pessoas, setPessoas] = useState<Pessoa[]>([])
@@ -215,7 +221,7 @@ export default function AtendimentosPage() {
 
 
   // =====================================================
-  // USUÁRIO LOGADO
+  // AUTENTICAÇÃO E USUÁRIO LOGADO
   // =====================================================
 
   useEffect(() => {
@@ -228,7 +234,7 @@ export default function AtendimentosPage() {
 
 
   // =====================================================
-  // CONSULTA DE PESSOAS
+  // FIRESTORE: PESSOAS
   // =====================================================
 
   useEffect(() => {
@@ -250,7 +256,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // CONSULTA DE ASSOCIADOS
+  // FIRESTORE: ASSOCIADOS
   // =====================================================
 
   useEffect(() => {
@@ -272,7 +278,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // CONSULTA DE REPRESENTANTES
+  // FIRESTORE: REPRESENTANTES
   // =====================================================
 
   useEffect(() => {
@@ -294,7 +300,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // CONSULTA DE PROFISSIONAIS
+  // FIRESTORE: PROFISSIONAIS
   // =====================================================
 
   useEffect(() => {
@@ -316,7 +322,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // CONSULTA DE CONVÊNIOS
+  // FIRESTORE: CONVÊNIOS
   // =====================================================
 
   useEffect(() => {
@@ -338,7 +344,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // CONSULTA DE ATENDIMENTOS
+  // FIRESTORE: ATENDIMENTOS
   // =====================================================
 
   useEffect(() => {
@@ -360,7 +366,7 @@ export default function AtendimentosPage() {
   }, [])
 
   // =====================================================
-  // FUNÇÕES DE TEXTO
+  // UTILITÁRIOS DE TEXTO
   // =====================================================
 
   function normalizarTexto(texto: string) {
@@ -386,7 +392,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // FILTRO DE ATENDIMENTOS DO DIA
+  // UTILITÁRIO DE DATA PARA ATENDIMENTOS
   // =====================================================
 
   function ehAtendimentoDeHoje(atendimento: Atendimento) {
@@ -405,7 +411,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // FUNÇÕES AUXILIARES DE BUSCA POR ID
+  // BUSCAS POR ID DE ENTIDADES
   // =====================================================
 
   function buscarPessoa(pessoa_id?: string | null) {
@@ -444,21 +450,26 @@ export default function AtendimentosPage() {
   }
 
   function preencherDadosPorMatricula(matriculaInformada: string) {
-    const associado =
-      buscarAssociadoPorMatricula(matriculaInformada)
+    const valor = matriculaInformada.trim()
 
-    if (!associado) return
-
-    const pessoa =
-      buscarPessoa(associado.pessoa_id)
-
-    if (pessoa) {
-      setNomePessoa(pessoa.nome)
+    if (valor === "") {
+      setNomePessoa("")
+      setConvenioId("")
+      return
     }
 
-    if (associado.convenio_id) {
-      setConvenioId(associado.convenio_id)
+    const associado = buscarAssociadoPorMatricula(valor)
+
+    if (!associado) {
+      setNomePessoa("")
+      setConvenioId("")
+      return
     }
+
+    const pessoa = buscarPessoa(associado.pessoa_id)
+
+    setNomePessoa(pessoa?.nome || "")
+    setConvenioId(associado.convenio_id || "")
   }
 
   function profissionalDoUsuarioLogado() {
@@ -472,7 +483,7 @@ export default function AtendimentosPage() {
 
 
   // =====================================================
-  // CRIA OU REAPROVEITA PESSOA
+  // CRIAR OU REAPROVEITAR PESSOA
   // =====================================================
 
   async function obterOuCriarPessoa(nome: string) {
@@ -511,7 +522,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // CRIA OU REAPROVEITA ASSOCIADO
+  // CRIAR OU REAPROVEITAR ASSOCIADO
   // =====================================================
 
   async function obterOuCriarAssociado(
@@ -556,7 +567,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // CRIA OU REAPROVEITA REPRESENTANTE
+  // CRIAR OU REAPROVEITAR REPRESENTANTE
   // =====================================================
 
   async function obterOuCriarRepresentante(
@@ -600,7 +611,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // HISTÓRICO DO ATENDIMENTO
+  // HISTÓRICO DE ATENDIMENTOS
   // =====================================================
 
   async function registrarHistorico(
@@ -627,7 +638,7 @@ export default function AtendimentosPage() {
     }
   }
   // =====================================================
-  // REGISTRAR CHEGADA
+  // AÇÃO: REGISTRAR CHEGADA
   // =====================================================
 
   async function registrarChegada() {
@@ -730,7 +741,9 @@ export default function AtendimentosPage() {
     }
   }
 
-  /* CHAMAR PRÓXIMO ATENDIMENTO */
+  // =====================================================
+  // AÇÃO: CHAMAR PRÓXIMO ATENDIMENTO
+  // =====================================================
   async function chamarProximoAtendimento() {
     if (!podeOperarAtendimento) {
       toast.error("Você não tem permissão para operar a fila.")
@@ -749,19 +762,23 @@ export default function AtendimentosPage() {
       return
     }
 
+    const atendimentoAbertoDoProfissional = atendimentos.find(
+      (atendimento) =>
+        atendimento.status === "em_atendimento" &&
+        atendimento.profissional_id === profissionalResponsavel
+    )
+
+    if (atendimentoAbertoDoProfissional) {
+      toast.warning("Este profissional já possui um atendimento em aberto.")
+      return
+    }
+
     const filaAguardando = atendimentosOrdenados.filter(
       (atendimento) => atendimento.status === "aguardando"
     )
 
     const atendimentoSelecionado = filaAguardando.find((atendimento) => {
       const preferencia = atendimento.profissional_preferencial_id
-
-      if (
-        usuarioSistema?.perfil === "Administrador" ||
-        usuarioSistema?.perfil === "Recepção"
-      ) {
-        return true
-      }
 
       return (
         !preferencia ||
@@ -815,8 +832,46 @@ export default function AtendimentosPage() {
     }
   }
 
+  async function alterarPreferenciaAtendimento(
+    atendimentoId: string,
+    profissionalId: string
+  ) {
+    if (
+      usuarioSistema?.perfil !== "Administrador" &&
+      usuarioSistema?.perfil !== "Recepção"
+    ) {
+      toast.warning("Você não tem permissão para alterar preferência.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`preferencia_${atendimentoId}`)
+
+      await updateDoc(doc(db, "atendimentos", atendimentoId), {
+        profissional_preferencial_id: profissionalId || null,
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoId,
+        "preferencia_alterada",
+        profissionalId
+          ? "Preferência profissional alterada."
+          : "Preferência profissional removida."
+      )
+
+      toast.success("Preferência atualizada.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao alterar preferência.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
+  }
+
   // =====================================================
-  // FINALIZAR ATENDIMENTO
+  // AÇÃO: FINALIZAR ATENDIMENTO
   // =====================================================
 
   async function finalizarAtendimento(id: string) {
@@ -846,15 +901,51 @@ export default function AtendimentosPage() {
     }
   }
 
-  // =====================================================
-  // CANCELAR ATENDIMENTO
-  // =====================================================
+  async function finalizarAtendimentoPendente() {
+    if (!atendimentoPendenteId) {
+      toast.error("Atendimento não identificado.")
+      return
+    }
+
+    if (observacaoPendencia.trim() === "") {
+      toast.warning("Informe uma observação para encerrar.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`finalizar_pendente_${atendimentoPendenteId}`)
+
+      await updateDoc(doc(db, "atendimentos", atendimentoPendenteId), {
+        status: "finalizado",
+        fim_atendimento: serverTimestamp(),
+        observacao_encerramento: observacaoPendencia.trim(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoPendenteId,
+        "atendimento_finalizado_posteriormente",
+        observacaoPendencia.trim()
+      )
+
+      toast.success("Atendimento pendente encerrado.")
+
+      setModalPendenciaAberto(false)
+      setAtendimentoPendenteId("")
+      setObservacaoPendencia("")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao encerrar atendimento pendente.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
+  }
+
 
   // =====================================================
-  // CONFIRMAR CANCELAMENTO DO ATENDIMENTO
+  // AÇÃO: CONFIRMAR CANCELAMENTO DE ATENDIMENTO
   // =====================================================
-  // Essa função é chamada pelo modal de cancelamento.
-  // Ela usa o motivo digitado no textarea do modal.
   async function confirmarCancelamentoAtendimento() {
     if (!podeOperarAtendimento) {
       toast.warning("Você não tem permissão para cancelar atendimento.")
@@ -904,7 +995,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // CÁLCULO DE TEMPO DE ESPERA
+  // UTILITÁRIOS DE TEMPO
   // =====================================================
 
   function calcularTempo(timestamp: any) {
@@ -924,7 +1015,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // CÁLCULO DE DURAÇÃO DO ATENDIMENTO
+  // UTILITÁRIOS DE DURAÇÃO
   // =====================================================
 
   function calcularDuracao(inicio: any, fim?: any) {
@@ -944,7 +1035,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // NOME VISUAL DOS STATUS
+  // DESCRITIVO DE STATUS
   // =====================================================
 
   function nomeStatus(status: StatusAtendimento) {
@@ -959,7 +1050,7 @@ export default function AtendimentosPage() {
   }
 
   // =====================================================
-  // CLASSE VISUAL DOS STATUS
+  // ESTILO POR STATUS
   // =====================================================
 
   function classeStatus(status: StatusAtendimento) {
@@ -977,8 +1068,10 @@ export default function AtendimentosPage() {
     return classes[status]
   }
 
+
+
   // =====================================================
-  // ATENDIMENTOS DO DIA
+  // FILTRAGEM: ATENDIMENTOS DO DIA
   // =====================================================
 
   const atendimentosDoDia = atendimentos.filter(ehAtendimentoDeHoje)
@@ -1007,7 +1100,7 @@ export default function AtendimentosPage() {
   })
 
   // =====================================================
-  // FILTRO DE STATUS DA FILA
+  // FILTRAGEM POR STATUS
   // =====================================================
 
   const atendimentosFiltrados = atendimentosOrdenados.filter((atendimento) => {
@@ -1022,7 +1115,7 @@ export default function AtendimentosPage() {
   })
 
   // =====================================================
-  // CONTADORES DO DIA
+  // CONTADORES DE STATUS
   // =====================================================
 
   const totalAguardando =
@@ -1037,6 +1130,17 @@ export default function AtendimentosPage() {
   const totalCancelados =
     atendimentosDoDia.filter((a) => a.status === "cancelado").length
 
+  // =====================================================
+  // ATENDIMENTOS EM ABERTO DE DIAS ANTERIORES
+  // =====================================================
+  const atendimentosAbertosAnteriores = atendimentos.filter((atendimento) => {
+    return (
+      atendimento.status === "em_atendimento" &&
+      !ehAtendimentoDeHoje(atendimento)
+    )
+  })
+
+
   const profissionalAutomatico = profissionalDoUsuarioLogado()
 
   function obterNomeProfissional(id?: string | null) {
@@ -1049,9 +1153,7 @@ export default function AtendimentosPage() {
 
   return (
     <div className="space-y-6">
-      {/* =====================================================
-          CABEÇALHO DA PÁGINA
-          ===================================================== */}
+      {/* ================ CABEÇALHO DA PÁGINA ================ */}
 
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -1063,9 +1165,7 @@ export default function AtendimentosPage() {
         </p>
       </div>
 
-      {/* =====================================================
-          CARDS RESUMO
-          ===================================================== */}
+      {/* ==================== CARDS RESUMO ==================== */}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/80 p-4">
@@ -1097,9 +1197,7 @@ export default function AtendimentosPage() {
         </div>
       </div>
 
-      {/* =====================================================
-          FORMULÁRIO DE NOVO ATENDIMENTO
-          ===================================================== */}
+      {/* ================ FORMULÁRIO DE ATENDIMENTO ================ */}
       {podeRegistrarChegada && (
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-5">
@@ -1131,7 +1229,7 @@ export default function AtendimentosPage() {
                       setMatricula("")
                       setConvenioId("")
                     }}
-                    className="h-11 w-full rounded-xl border border-blue-500/30 bg-blue-50 px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-blue-800 dark:bg-blue-950/20 dark:text-zinc-100"
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
                   >
                     <option value="associado">Associado</option>
                     <option value="nao_associado">Não associado</option>
@@ -1353,7 +1451,7 @@ export default function AtendimentosPage() {
                     value={observacao}
                     onChange={(e) => setObservacao(e.target.value)}
                     placeholder="Observações adicionais"
-                    className="min-h-[88px] w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    className="min-h-22 w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
                 </div>
               </div>
@@ -1374,7 +1472,7 @@ export default function AtendimentosPage() {
         </section>
       )}
 
-      {/* OPERAR ATENDIMENTO / CHAMAR PRÓXIMO */}
+      {/* ==================== CHAMADA DA FILA ==================== */}
       {podeOperarAtendimento && (
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <div className="mb-4">
@@ -1438,6 +1536,70 @@ export default function AtendimentosPage() {
                 ? "Chamando..."
                 : "Chamar próximo"}
             </Botao>
+          </div>
+        </section>
+      )}
+
+      {/* ================= ATENDIMENTOS ABERTOS ANTERIORES ================= */}
+      {atendimentosAbertosAnteriores.length > 0 && (
+        <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm dark:border-amber-700/50 dark:bg-amber-950/20">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-amber-900 dark:text-amber-200">
+              Atendimentos em aberto de dias anteriores
+            </h2>
+
+            <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
+              Estes atendimentos foram iniciados anteriormente e ainda não foram finalizados.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {atendimentosAbertosAnteriores.map((atendimento) => {
+              const pessoa = buscarPessoa(atendimento.pessoa_id)
+              const profissional = buscarProfissional(atendimento.profissional_id)
+
+              return (
+                <div
+                  key={atendimento.id}
+                  className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-white p-4 dark:border-amber-800 dark:bg-zinc-950 lg:flex-row lg:items-center lg:justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      {pessoa?.nome || "Pessoa não encontrada"}
+                    </p>
+
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                      Profissional: {profissional?.nome || "Não definido"}
+                    </p>
+
+                    {atendimento.inicio_atendimento && (
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Iniciado em:{" "}
+                        {new Date(
+                          atendimento.inicio_atendimento.seconds * 1000
+                        ).toLocaleString("pt-BR")}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setAtendimentoPendenteId(atendimento.id || "")
+                      setObservacaoPendencia("")
+                      setModalPendenciaAberto(true)
+                    }}
+                    disabled={
+                      acaoEmAndamento === `finalizar_pendente_${atendimento.id}`
+                    }
+                    className="h-10 rounded-lg border border-amber-500/40 bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {acaoEmAndamento === `finalizar_pendente_${atendimento.id}`
+                      ? "Encerrando..."
+                      : "Encerrar com observação"}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </section>
       )}
@@ -1576,6 +1738,39 @@ export default function AtendimentosPage() {
                             </p>
                           )}
 
+                          {(usuarioSistema?.perfil === "Administrador" ||
+                            usuarioSistema?.perfil === "Recepção") &&
+                            atendimento.status === "aguardando" &&
+                            atendimento.id && (
+                              <div className="mt-2 max-w-sm">
+                                <label className="mb-1 block text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                                  Alterar preferência
+                                </label>
+
+                                <select
+                                  value={atendimento.profissional_preferencial_id || ""}
+                                  onChange={(e) =>
+                                    alterarPreferenciaAtendimento(
+                                      atendimento.id!,
+                                      e.target.value
+                                    )
+                                  }
+                                  disabled={acaoEmAndamento === `preferencia_${atendimento.id}`}
+                                  className="h-9 w-full rounded-lg border border-zinc-300 bg-white px-3 text-xs text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                                >
+                                  <option value="">Sem preferência</option>
+
+                                  {profissionais
+                                    .filter((profissional) => profissional.ativo)
+                                    .map((profissional) => (
+                                      <option key={profissional.id} value={profissional.id}>
+                                        {profissional.nome}
+                                      </option>
+                                    ))}
+                                </select>
+                              </div>
+                            )}
+
                           {atendimento.profissional_id && (
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
                               Atendendo com:
@@ -1644,7 +1839,7 @@ export default function AtendimentosPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 lg:w-[260px]">
+                  <div className="flex flex-col gap-2 lg:w-65">
 
                     {podeOperarAtendimento &&
                       atendimento.status === "em_atendimento" &&
@@ -1686,9 +1881,59 @@ export default function AtendimentosPage() {
         </div>
       </section>
 
-      {/* =====================================================
-      MODAL DE CANCELAMENTO
-      ===================================================== */}
+      {/* Modal para encerramento de atendimento em aberto
+       com observação */}
+
+      {modalPendenciaAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Encerrar atendimento pendente
+            </h2>
+
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Informe uma observação para registrar o motivo do encerramento posterior.
+            </p>
+
+            <textarea
+              value={observacaoPendencia}
+              onChange={(e) => setObservacaoPendencia(e.target.value)}
+              placeholder="Exemplo: Atendimento foi concluído no dia anterior, mas não foi finalizado no sistema."
+              className="mt-4 min-h-30 w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            />
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalPendenciaAberto(false)
+                  setAtendimentoPendenteId("")
+                  setObservacaoPendencia("")
+                }}
+                disabled={acaoEmAndamento.startsWith("finalizar_pendente_")}
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={finalizarAtendimentoPendente}
+                disabled={acaoEmAndamento.startsWith("finalizar_pendente_")}
+                className="h-10 rounded-lg border border-amber-500/40 bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {acaoEmAndamento.startsWith("finalizar_pendente_")
+                  ? "Encerrando..."
+                  : "Confirmar encerramento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== 
+        MODAL CANCELAMENTO
+       ==================== */}
       {modalCancelamentoAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
 
@@ -1707,7 +1952,7 @@ export default function AtendimentosPage() {
               onChange={(e) => setMotivoCancelamento(e.target.value)}
               placeholder="Digite o motivo do cancelamento"
               className="
-              mt-4 min-h-[120px] w-full resize-none rounded-xl
+              mt-4 min-h-30 w-full resize-none rounded-xl
               border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-950 px-4 py-3
               text-sm text-zinc-900 dark:text-zinc-100 outline-none transition
               placeholder:text-zinc-400 dark:placeholder:text-zinc-500

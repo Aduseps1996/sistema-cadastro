@@ -829,12 +829,12 @@ export default function InicioPage() {
             <table className="w-full border-collapse text-sm">
               <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500 dark:bg-zinc-950/60">
                 <tr>
-                  <th className="px-5 py-3 text-left font-semibold">Pessoa</th>
-                  <th className="px-5 py-3 text-left font-semibold">Tipo / Matrícula</th>
-                  <th className="px-5 py-3 text-left font-semibold">Convênio</th>
-                  <th className="px-5 py-3 text-left font-semibold">Profissional</th>
-                  <th className="w-40 px-5 py-3 text-left font-semibold">Status</th>
-                  <th className="w-48 px-5 py-3 text-left font-semibold">Chegada</th>
+                  <th className="px-4 py-2 text-left font-semibold">Pessoa</th>
+                  <th className="hidden px-4 py-2 text-left font-semibold hidden md:table-cell">Tipo / Matrícula</th>
+                  <th className="hidden px-4 py-2 text-left font-semibold hidden lg:table-cell">Convênio</th>
+                  <th className="hidden px-4 py-2 text-left font-semibold hidden lg:table-cell">Profissional</th>
+                  <th className="w-36 px-4 py-2 text-left font-semibold">Status</th>
+                  <th className="w-44 px-4 py-2 text-left font-semibold">Chegada</th>
                 </tr>
               </thead>
 
@@ -853,18 +853,18 @@ export default function InicioPage() {
                       key={atendimento.id}
                       className="transition hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     >
-                      <td className="px-5 py-3 align-middle">
+                      <td className="px-4 py-2 align-middle">
                         <div>
                           <button
                             type="button"
                             onClick={() => abrirDetalhesAtendimento(atendimento)}
-                            className="text-left font-semibold text-zinc-900 underline-offset-4 transition hover:text-blue-700 hover:underline dark:text-zinc-100 dark:hover:text-blue-300"
+                            className="line-clamp-1 text-left text-sm font-semibold text-zinc-900 underline-offset-4 transition hover:text-blue-700 hover:underline dark:text-zinc-100 dark:hover:text-blue-300"
                           >
                             {pessoa?.nome.toUpperCase() || "Pessoa não encontrada"}
                           </button>
 
                           {(atendimento.observacao || atendimento.motivo) && (
-                            <p className="mt-0.5 max-w-[360px] truncate text-xs text-zinc-500">
+                            <p className="mt-0.5 hidden max-w-[320px] truncate text-xs text-zinc-500 lg:block">
                               {atendimento.observacao ||
                                 `Cancelamento: ${atendimento.motivo}`}
                             </p>
@@ -872,9 +872,9 @@ export default function InicioPage() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-700 dark:text-zinc-300">
+                      <td className="hidden px-4 py-2 align-middle text-zinc-700 dark:text-zinc-300 md:table-cell">
                         <div>
-                          <p>
+                          <p className="text-sm">
                             {atendimento.tipo === "associado"
                               ? "Associado"
                               : "Não associado"}
@@ -888,13 +888,13 @@ export default function InicioPage() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-700 dark:text-zinc-300">
+                      <td className="hidden px-4 py-2 align-middle text-zinc-700 dark:text-zinc-300 xl:table-cell">
                         {convenio?.nome || "Não informado"}
                       </td>
 
-                      <td className="px-5 py-3 align-middle">
+                      <td className="hidden px-4 py-2 align-middle xl:table-cell">
                         <div>
-                          <p className="text-zinc-700 dark:text-zinc-300">
+                          <p className="text-sm text-zinc-700 dark:text-zinc-300">
                             {profissional?.nome || "Não definido"}
                           </p>
 
@@ -906,9 +906,9 @@ export default function InicioPage() {
                         </div>
                       </td>
 
-                      <td className="px-5 py-3 align-middle">
+                      <td className="px-4 py-2 align-middle">
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${classeStatus(
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${classeStatus(
                             atendimento.status
                           )}`}
                         >
@@ -916,7 +916,7 @@ export default function InicioPage() {
                         </span>
                       </td>
 
-                      <td className="px-5 py-3 align-middle text-zinc-600 dark:text-zinc-400">
+                      <td className="px-4 py-2 align-middle text-xs text-zinc-600 dark:text-zinc-400">
                         {formatarDataHora(atendimento)}
                       </td>
                     </tr>
