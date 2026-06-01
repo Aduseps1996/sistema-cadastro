@@ -167,6 +167,8 @@ export default function AtendimentosPage() {
   const [nomePessoa, setNomePessoa] = useState("")
   const [matricula, setMatricula] = useState("")
   const [convenioId, setConvenioId] = useState("")
+  const [buscaConvenio, setBuscaConvenio] = useState("")
+  const [mostrarListaConvenios, setMostrarListaConvenios] = useState(false)
   const [usarRepresentante, setUsarRepresentante] = useState(false)
   const [nomeRepresentante, setNomeRepresentante] = useState("")
   const [tipoRepresentante, setTipoRepresentante] = useState("")
@@ -455,6 +457,7 @@ export default function AtendimentosPage() {
     if (valor === "") {
       setNomePessoa("")
       setConvenioId("")
+      setBuscaConvenio("")
       return
     }
 
@@ -463,6 +466,7 @@ export default function AtendimentosPage() {
     if (!associado) {
       setNomePessoa("")
       setConvenioId("")
+      setBuscaConvenio("")
       return
     }
 
@@ -470,7 +474,11 @@ export default function AtendimentosPage() {
 
     setNomePessoa(pessoa?.nome || "")
     setConvenioId(associado.convenio_id || "")
-  }
+
+    const convenio = buscarConvenio(associado.convenio_id)
+
+    setBuscaConvenio(convenio?.nome || "")
+      }
 
   function profissionalDoUsuarioLogado() {
     if (!usuarioSistema?.profissional_id) return null
@@ -724,6 +732,7 @@ export default function AtendimentosPage() {
       setNomePessoa("")
       setMatricula("")
       setConvenioId("")
+      setBuscaConvenio("")
       setUsarRepresentante(false)
       setNomeRepresentante("")
       setTipoRepresentante("")
@@ -1151,6 +1160,14 @@ export default function AtendimentosPage() {
     )?.nome
   }
 
+  const conveniosFiltrados = convenios
+  .filter((convenio) => convenio.ativo)
+  .filter((convenio) =>
+    convenio.nome
+      .toLowerCase()
+      .includes(buscaConvenio.toLowerCase().trim())
+  )
+
   return (
     <div className="space-y-6">
       {/* ================ CABEÇALHO DA PÁGINA ================ */}
@@ -1228,6 +1245,7 @@ export default function AtendimentosPage() {
                       setTipo(e.target.value as TipoAtendimento)
                       setMatricula("")
                       setConvenioId("")
+                      setBuscaConvenio("")
                     }}
                     className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
                   >
@@ -1275,24 +1293,56 @@ export default function AtendimentosPage() {
                     Convênio
                   </label>
 
-                  <select
-                    value={convenioId}
-                    onChange={(e) => setConvenioId(e.target.value)}
-                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                  >
-                    <option value="">
-                      {tipo === "associado" ? "Obrigatório" : "Opcional"}
-                    </option>
+                  <div className="relative">
+  <input
+    type="text"
+    placeholder={
+      tipo === "associado"
+        ? "Digite o convênio"
+        : "Convênio opcional"
+    }
+    value={buscaConvenio}
+    onChange={(e) => {
+      setBuscaConvenio(e.target.value)
+      setConvenioId("")
+      setMostrarListaConvenios(true)
+    }}
+    onFocus={() => setMostrarListaConvenios(true)}
+    onBlur={() => {
+      setTimeout(() => {
+        setMostrarListaConvenios(false)
+      }, 150)
+    }}
+    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+  />
 
-                    {convenios
-                      .filter((convenio) => convenio.ativo)
-                      .map((convenio) => (
-                        <option key={convenio.id} value={convenio.id}>
-                          {convenio.nome}
-                        </option>
-                      ))}
-                  </select>
+  {mostrarListaConvenios && buscaConvenio.trim() !== "" && (
+    <div className="absolute z-50 mt-2 max-h-56 w-full overflow-auto rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900">
+      {conveniosFiltrados.length === 0 && (
+        <p className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+          Nenhum convênio encontrado.
+        </p>
+      )}
+
+      {conveniosFiltrados.map((convenio) => (
+        <button
+          key={convenio.id}
+          type="button"
+          onMouseDown={() => {
+            setConvenioId(convenio.id || "")
+            setBuscaConvenio(convenio.nome)
+            setMostrarListaConvenios(false)
+          }}
+          className="w-full px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          {convenio.nome}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
                 </div>
+                
               </div>
             </div>
 
