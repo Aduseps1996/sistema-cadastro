@@ -1313,7 +1313,7 @@ export default function AtendimentosPage() {
 
                   {matriculaNaoEncontrada && (
                     <p className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                      Matrícula não localizada. Confira ou preencha os dados manualmente.
+                      Matrícula não cadastrada. Prosseguir com o cadastro manualmente.
                     </p>
                   )}
                 </div>
