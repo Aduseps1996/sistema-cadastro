@@ -826,7 +826,7 @@ export default function AtendimentosPage() {
         "atendimento_chamado"
       )
 
-      toast.success("Próximo atendimento iniciado.")
+      toast.success("Atendimento chamado.")
 
       if (
         usuarioSistema?.perfil === "Administrador" ||
@@ -918,31 +918,51 @@ export default function AtendimentosPage() {
   // =====================================================
 
   async function finalizarAtendimento(id: string) {
-    if (!podeOperarAtendimento) {
-      toast.warning("Você não tem permissão para finalizar atendimento.")
-      return
-    }
-
-    if (acaoEmAndamento) return
-
-    try {
-      setAcaoEmAndamento(`finalizar_${id}`)
-
-      await updateDoc(doc(db, "atendimentos", id), {
-        status: "finalizado",
-        fim_atendimento: serverTimestamp(),
-        atualizado_em: serverTimestamp(),
-        atualizado_por: usuarioLogado
-      })
-
-      await registrarHistorico(id, "atendimento_finalizado")
-    } catch (error) {
-      console.error(error)
-      toast.error("Erro ao finalizar atendimento. Tente novamente.")
-    } finally {
-      setAcaoEmAndamento("")
-    }
+  if (!podeOperarAtendimento) {
+    toast.warning("Você não tem permissão para finalizar atendimento.")
+    return
   }
+
+  if (acaoEmAndamento) return
+
+  const atendimentoAtual = atendimentos.find(
+    (atendimento) => atendimento.id === id
+  )
+
+  if (!atendimentoAtual) {
+    toast.error("Atendimento não encontrado.")
+    return
+  }
+
+  try {
+    setAcaoEmAndamento(`finalizar_${id}`)
+
+    await updateDoc(doc(db, "atendimentos", id), {
+      status: "finalizado",
+
+      inicio_atendimento:
+        atendimentoAtual.inicio_atendimento || serverTimestamp(),
+
+      fim_atendimento: serverTimestamp(),
+      atualizado_em: serverTimestamp(),
+      atualizado_por: usuarioLogado
+    })
+
+    await registrarHistorico(
+      id,
+      atendimentoAtual.status === "chamado"
+        ? "atendimento_finalizado_sem_inicio"
+        : "atendimento_finalizado"
+    )
+
+    toast.success("Atendimento finalizado.")
+  } catch (error) {
+    console.error(error)
+    toast.error("Erro ao finalizar atendimento. Tente novamente.")
+  } finally {
+    setAcaoEmAndamento("")
+  }
+}
 
   async function finalizarAtendimentoPendente() {
     if (!atendimentoPendenteId) {
@@ -1951,7 +1971,8 @@ export default function AtendimentosPage() {
                       )}
 
                     {podeOperarAtendimento &&
-                      atendimento.status === "em_atendimento" &&
+                      (atendimento.status === "chamado" ||
+                        atendimento.status === "em_atendimento") &&
                       atendimento.id && (
                         <button
                           onClick={() => finalizarAtendimento(atendimento.id!)}
@@ -1960,7 +1981,9 @@ export default function AtendimentosPage() {
                         >
                           {acaoEmAndamento === `finalizar_${atendimento.id}`
                             ? "Finalizando..."
-                            : "Finalizar"}
+                            : atendimento.status === "chamado"
+                              ? "Finalizar sem iniciar"
+                              : "Finalizar"}
                         </button>
                     )}
 
