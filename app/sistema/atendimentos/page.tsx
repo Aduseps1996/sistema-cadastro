@@ -110,15 +110,19 @@ const motivosAtendimento: Record<string, string[]> = {
     "Cancelamento",
     "Autorização",
     "Reembolso",
-    "Cobrança"
+    "Cobrança",
+    "Outro"
   ],
 
   Jurídico: [
     "Entrega de documentos",
     "Informação processual",
     "SUS",
-    "Plano de saúde",
-    "Audiência"
+    "Orientação Jurídica",
+    "Nova demanda",
+    "Assinatura de docuemntos",
+    "Retorno jurídico",
+    "Outro"
   ],
 
   Inscrição: [
@@ -166,6 +170,7 @@ export default function AtendimentosPage() {
   const [tipo, setTipo] = useState<TipoAtendimento>("associado")
   const [nomePessoa, setNomePessoa] = useState("")
   const [matricula, setMatricula] = useState("")
+  const [matriculaNaoEncontrada, setMatriculaNaoEncontrada] = useState(false)
   const [convenioId, setConvenioId] = useState("")
   const [buscaConvenio, setBuscaConvenio] = useState("")
   const [mostrarListaConvenios, setMostrarListaConvenios] = useState(false)
@@ -452,33 +457,28 @@ export default function AtendimentosPage() {
   }
 
   function preencherDadosPorMatricula(matriculaInformada: string) {
-    const valor = matriculaInformada.trim()
+  const valor = matriculaInformada.trim()
 
-    if (valor === "") {
-      setNomePessoa("")
-      setConvenioId("")
-      setBuscaConvenio("")
-      return
-    }
+  if (valor === "") {
+    setMatriculaNaoEncontrada(false)
+    return
+  }
 
-    const associado = buscarAssociadoPorMatricula(valor)
+  const associado = buscarAssociadoPorMatricula(valor)
 
-    if (!associado) {
-      setNomePessoa("")
-      setConvenioId("")
-      setBuscaConvenio("")
-      return
-    }
+  if (!associado) {
+    setMatriculaNaoEncontrada(true)
+    return
+  }
 
-    const pessoa = buscarPessoa(associado.pessoa_id)
+  const pessoa = buscarPessoa(associado.pessoa_id)
+  const convenio = buscarConvenio(associado.convenio_id)
 
-    setNomePessoa(pessoa?.nome || "")
-    setConvenioId(associado.convenio_id || "")
-
-    const convenio = buscarConvenio(associado.convenio_id)
-
-    setBuscaConvenio(convenio?.nome || "")
-      }
+  setNomePessoa(pessoa?.nome || "")
+  setConvenioId(associado.convenio_id || "")
+  setBuscaConvenio(convenio?.nome || "")
+  setMatriculaNaoEncontrada(false)
+}
 
   function profissionalDoUsuarioLogado() {
     if (!usuarioSistema?.profissional_id) return null
@@ -731,6 +731,7 @@ export default function AtendimentosPage() {
       setTipo("associado")
       setNomePessoa("")
       setMatricula("")
+      setMatriculaNaoEncontrada(false)
       setConvenioId("")
       setBuscaConvenio("")
       setUsarRepresentante(false)
@@ -1271,6 +1272,12 @@ export default function AtendimentosPage() {
                     disabled={tipo === "nao_associado"}
                     className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 disabled:opacity-50 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                   />
+
+                  {matriculaNaoEncontrada && (
+                    <p className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                      Matrícula não localizada. Confira ou preencha os dados manualmente.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1 md:col-span-5">
