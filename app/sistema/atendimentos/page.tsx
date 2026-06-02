@@ -66,6 +66,7 @@ type Convenio = {
 
 type StatusAtendimento =
   | "aguardando"
+  | "chamado"
   | "em_atendimento"
   | "finalizado"
   | "cancelado"
@@ -117,10 +118,9 @@ const motivosAtendimento: Record<string, string[]> = {
   Jurídico: [
     "Entrega de documentos",
     "Informação processual",
-    "SUS",
     "Orientação Jurídica",
     "Nova demanda",
-    "Assinatura de docuemntos",
+    "Assinatura de documentos",
     "Retorno jurídico",
     "Outro"
   ],
@@ -805,9 +805,9 @@ export default function AtendimentosPage() {
       setAcaoEmAndamento("chamar_proximo")
 
       await updateDoc(doc(db, "atendimentos", atendimentoSelecionado.id), {
-        status: "em_atendimento",
+        status: "chamado",
         profissional_id: profissionalResponsavel,
-        inicio_atendimento: serverTimestamp(),
+        data_hora_chamada: serverTimestamp(),
         atualizado_em: serverTimestamp(),
         atualizado_por: usuarioLogado
       })
@@ -823,7 +823,7 @@ export default function AtendimentosPage() {
 
       await registrarHistorico(
         atendimentoSelecionado.id,
-        "atendimento_iniciado"
+        "atendimento_chamado"
       )
 
       toast.success("Próximo atendimento iniciado.")
@@ -879,6 +879,39 @@ export default function AtendimentosPage() {
       setAcaoEmAndamento("")
     }
   }
+
+  // =====================================================
+  // AÇÃO: INICIAR ATENDIMENTO
+  // =====================================================
+
+  async function iniciarAtendimento(id: string) {
+  if (!podeOperarAtendimento) {
+    toast.warning("Você não tem permissão para iniciar atendimento.")
+    return
+  }
+
+  if (acaoEmAndamento) return
+
+  try {
+    setAcaoEmAndamento(`iniciar_${id}`)
+
+    await updateDoc(doc(db, "atendimentos", id), {
+      status: "em_atendimento",
+      inicio_atendimento: serverTimestamp(),
+      atualizado_em: serverTimestamp(),
+      atualizado_por: usuarioLogado
+    })
+
+    await registrarHistorico(id, "atendimento_iniciado")
+
+    toast.success("Atendimento iniciado.")
+  } catch (error) {
+    console.error(error)
+    toast.error("Erro ao iniciar atendimento.")
+  } finally {
+    setAcaoEmAndamento("")
+  }
+}
 
   // =====================================================
   // AÇÃO: FINALIZAR ATENDIMENTO
@@ -1051,6 +1084,7 @@ export default function AtendimentosPage() {
   function nomeStatus(status: StatusAtendimento) {
     const nomes: Record<StatusAtendimento, string> = {
       aguardando: "Aguardando",
+      chamado: "Chamado",
       em_atendimento: "Em atendimento",
       finalizado: "Finalizado",
       cancelado: "Cancelado"
@@ -1067,6 +1101,8 @@ export default function AtendimentosPage() {
     const classes: Record<StatusAtendimento, string> = {
       aguardando:
         "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      chamado:
+        "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300",
       em_atendimento:
         "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
       finalizado:
@@ -1092,6 +1128,7 @@ export default function AtendimentosPage() {
 
   const atendimentosOrdenados = [...atendimentosDoDia].sort((a, b) => {
     const ordemStatus: Record<string, number> = {
+      chamado: 0,
       aguardando: 1,
       em_atendimento: 2,
       finalizado: 3,
@@ -1116,6 +1153,7 @@ export default function AtendimentosPage() {
   const atendimentosFiltrados = atendimentosOrdenados.filter((atendimento) => {
     if (filtroStatus === "todos") {
       return (
+        atendimento.status === "chamado" ||
         atendimento.status === "aguardando" ||
         atendimento.status === "em_atendimento"
       )
@@ -1899,6 +1937,20 @@ export default function AtendimentosPage() {
                   <div className="flex flex-col gap-2 lg:w-65">
 
                     {podeOperarAtendimento &&
+                      atendimento.status === "chamado" &&
+                      atendimento.id && (
+                        <button
+                          onClick={() => iniciarAtendimento(atendimento.id!)}
+                          disabled={acaoEmAndamento === `iniciar_${atendimento.id}`}
+                          className="h-10 w-full rounded-lg border border-blue-500/40 bg-blue-600 px-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {acaoEmAndamento === `iniciar_${atendimento.id}`
+                            ? "Iniciando..."
+                            : "Iniciar"}
+                        </button>
+                      )}
+
+                    {podeOperarAtendimento &&
                       atendimento.status === "em_atendimento" &&
                       atendimento.id && (
                         <button
@@ -1910,7 +1962,7 @@ export default function AtendimentosPage() {
                             ? "Finalizando..."
                             : "Finalizar"}
                         </button>
-                      )}
+                    )}
 
                     {podeOperarAtendimento &&
                       atendimento.status !== "finalizado" &&

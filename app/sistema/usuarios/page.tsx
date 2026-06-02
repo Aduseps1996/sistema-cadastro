@@ -59,6 +59,17 @@ const perfis = [
   "Consulta"
 ]
 
+// =====================================================
+// LISTA DE PROFISSIONAIS DISPONÍVEIS
+// =====================================================
+// Profissionais disponíveis para atribuição aos usuários.
+
+type Profissional = {
+  id?: string
+  nome: string
+  ativo: boolean
+}
+
 export default function UsuariosPage() {
 
   // =====================================================
@@ -68,6 +79,7 @@ export default function UsuariosPage() {
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [perfil, setPerfil] = useState("")
+  const [profissionalId, setProfissionalId] = useState("")
 
   // =====================================================
   // ESTADO DA PESQUISA
@@ -78,6 +90,7 @@ export default function UsuariosPage() {
   // LISTA DE USUÁRIOS
   // =====================================================
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [profissionais, setProfissionais] = useState<Profissional[]>([])
 
   // =====================================================
   // ESTADOS DA EDIÇÃO INLINE
@@ -87,6 +100,7 @@ export default function UsuariosPage() {
   const [emailEdicao, setEmailEdicao] = useState("")
   const [perfilEdicao, setPerfilEdicao] = useState("")
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
+  const [profissionalIdEdicao, setProfissionalIdEdicao] = useState("")
 
   const [carregando, setCarregando] = useState(false)
 
@@ -115,6 +129,24 @@ export default function UsuariosPage() {
 
   }, [])
 
+  useEffect(() => {
+    const consulta = query(
+      collection(db, "profissionais"),
+      orderBy("nome", "asc")
+    )
+
+    const unsubscribe = onSnapshot(consulta, (resultado) => {
+      const lista = resultado.docs.map((documento) => ({
+        id: documento.id,
+        ...documento.data()
+      })) as Profissional[]
+
+      setProfissionais(lista)
+    })
+
+    return () => unsubscribe()
+  }, [])
+
   // =====================================================
   // CADASTRAR NOVO USUÁRIO
   // =====================================================
@@ -140,6 +172,11 @@ export default function UsuariosPage() {
 
     if (senha.length < 6) {
       toast.warning("A senha precisa ter pelo menos 6 caracteres.")
+      return
+    }
+
+    if (perfil === "Atendente" && profissionalId === "") {
+      toast.warning("Vincule um profissional ao usuário atendente.")
       return
     }
 
@@ -182,6 +219,7 @@ export default function UsuariosPage() {
         nome: nome.trim(),
         email: emailFormatado,
         perfil,
+        profissional_id: perfil === "Atendente" ? profissionalId : null,
         ativo: true,
         criado_em: serverTimestamp(),
         atualizado_em: serverTimestamp()
@@ -193,6 +231,7 @@ export default function UsuariosPage() {
       setEmail("")
       setSenha("")
       setPerfil("")
+      setProfissionalId("")
 
       toast.success("Usuário cadastrado com sucesso.")
 
@@ -226,6 +265,11 @@ export default function UsuariosPage() {
       return
     }
 
+    if (perfilEdicao === "Atendente" && profissionalIdEdicao === "") {
+      toast.warning("Vincule um profissional ao usuário atendente.")
+      return
+    }
+
     const emailFormatado =
       emailEdicao.trim().toLowerCase()
 
@@ -250,6 +294,7 @@ export default function UsuariosPage() {
         nome: nomeEdicao.trim(),
         email: emailFormatado,
         perfil: perfilEdicao,
+        profissional_id: perfilEdicao === "Atendente" ? profissionalIdEdicao : null,
         atualizado_em: serverTimestamp()
       })
 
@@ -350,6 +395,7 @@ export default function UsuariosPage() {
     setNomeEdicao(usuario.nome)
     setEmailEdicao(usuario.email)
     setPerfilEdicao(usuario.perfil)
+    setProfissionalIdEdicao(usuario.profissional_id || "")
   }
 
   // =====================================================
@@ -361,6 +407,7 @@ export default function UsuariosPage() {
     setNomeEdicao("")
     setEmailEdicao("")
     setPerfilEdicao("")
+    setProfissionalIdEdicao("")
   }
 
   // =====================================================
@@ -419,7 +466,7 @@ export default function UsuariosPage() {
         </div>
 
         {/* FORMULÁRIO */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
 
           {/* NOME */}
           <Input
@@ -453,9 +500,13 @@ export default function UsuariosPage() {
           {/* PERFIL */}
           <Select
             value={perfil}
-            onChange={(e) =>
+            onChange={(e) => {
               setPerfil(e.target.value)
-            }
+
+              if (e.target.value !== "Atendente") {
+                setProfissionalId("")
+              }
+            }}
           >
             <option value="">
               Perfil
@@ -470,6 +521,23 @@ export default function UsuariosPage() {
               </option>
             ))}
           </Select>
+
+          {perfil === "Atendente" && (
+            <Select
+              value={profissionalId}
+              onChange={(e) => setProfissionalId(e.target.value)}
+            >
+              <option value="">Vincular profissional</option>
+
+              {profissionais
+                .filter((profissional) => profissional.ativo)
+                .map((profissional) => (
+                  <option key={profissional.id} value={profissional.id}>
+                    {profissional.nome}
+                  </option>
+                ))}
+            </Select>
+          )}
 
         </div>
 
@@ -609,46 +677,69 @@ export default function UsuariosPage() {
 
                       {/* COLUNA PERFIL */}
                       <td className="px-5 py-3 align-middle">
-
                         {estaEditando ? (
+                          <div className="grid grid-cols-1 gap-2">
+                            <Select
+                              value={perfilEdicao}
+                              onChange={(e) => {
+                                setPerfilEdicao(e.target.value)
 
-                          <Select
-                            value={perfilEdicao}
-                            onChange={(e) =>
-                              setPerfilEdicao(e.target.value)
-                            }
-                          >
-                            <option value="">
-                              Perfil
-                            </option>
+                                if (e.target.value !== "Atendente") {
+                                  setProfissionalIdEdicao("")
+                                }
+                              }}
+                            >
+                              <option value="">Perfil</option>
 
-                            {perfis.map((item) => (
-                              <option
-                                key={item}
-                                value={item}
+                              {perfis.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </Select>
+
+                            {perfilEdicao === "Atendente" && (
+                              <Select
+                                value={profissionalIdEdicao}
+                                onChange={(e) => setProfissionalIdEdicao(e.target.value)}
                               >
-                                {item}
-                              </option>
-                            ))}
-                          </Select>
+                                <option value="">Vincular profissional</option>
 
+                                {profissionais
+                                  .filter((profissional) => profissional.ativo)
+                                  .map((profissional) => (
+                                    <option key={profissional.id} value={profissional.id}>
+                                      {profissional.nome}
+                                    </option>
+                                  ))}
+                              </Select>
+                            )}
+                          </div>
                         ) : (
+                          <div>
+                            <p className="text-zinc-700 dark:text-zinc-300">
+                              {usuario.perfil}
+                            </p>
 
-                          <p className="text-zinc-700 dark:text-zinc-300">
-                            {usuario.perfil}
-                          </p>
-
+                            {usuario.profissional_id && (
+                              <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                Profissional vinculado:{" "}
+                                {profissionais.find(
+                                  (profissional) => profissional.id === usuario.profissional_id
+                                )?.nome || "Não encontrado"}
+                              </p>
+                            )}
+                          </div>
                         )}
-
                       </td>
 
                       {/* COLUNA STATUS */}
                       <td className="px-5 py-3 align-middle">
 
-                      {/* Status dos usuários cadastrados */}
-                      <BadgeStatus
-                        status={usuario.ativo ? "Ativo" : "Inativo"}
-                      />
+                        {/* Status dos usuários cadastrados */}
+                        <BadgeStatus
+                          status={usuario.ativo ? "Ativo" : "Inativo"}
+                        />
 
                       </td>
 
