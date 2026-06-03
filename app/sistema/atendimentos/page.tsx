@@ -824,7 +824,10 @@ export default function AtendimentosPage() {
         nome: buscarPessoa(atendimentoSelecionado.pessoa_id)?.nome || "",
         matricula: buscarAssociado(atendimentoSelecionado.associado_id)?.matricula || "",
         profissional: buscarProfissional(profissionalResponsavel)?.nome || "",
+
         criado_em: serverTimestamp(),
+        criado_em_ms: Date.now(),
+
         repeticao_id: Date.now()
       })
 
@@ -882,7 +885,10 @@ export default function AtendimentosPage() {
         nome: buscarPessoa(atendimento.pessoa_id)?.nome || "",
         matricula: buscarAssociado(atendimento.associado_id)?.matricula || "",
         profissional: buscarProfissional(atendimento.profissional_id)?.nome || "",
+
         criado_em: serverTimestamp(),
+        criado_em_ms: Date.now(),
+
         repeticao_id: Date.now()
       })
 
