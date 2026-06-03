@@ -183,11 +183,6 @@ export default function AtendimentosPage() {
   const [observacao, setObservacao] = useState("")
 
 
-
-  const [modalSemAtendimentoAberto, setModalSemAtendimentoAberto] = useState(false)
-  const [atendimentoSemAtendimentoId, setAtendimentoSemAtendimentoId] = useState("")
-  const [observacaoSemAtendimento, setObservacaoSemAtendimento] = useState("")
-
   const [modalEncaminharAberto, setModalEncaminharAberto] = useState(false)
   const [atendimentoEncaminharId, setAtendimentoEncaminharId] = useState("")
   const [profissionalEncaminharId, setProfissionalEncaminharId] = useState("")
@@ -1074,51 +1069,6 @@ export default function AtendimentosPage() {
     } catch (error) {
       console.error(error)
       toast.error("Erro ao encerrar atendimento pendente.")
-    } finally {
-      setAcaoEmAndamento("")
-    }
-  }
-
-  // =====================================================
-  // AÇÃO: FINALIZAR ATENDIMENTO SEM ATENDIMENTO
-  // =====================================================
-
-  async function finalizarSemAtendimento() {
-    if (!atendimentoSemAtendimentoId) {
-      toast.error("Atendimento não identificado.")
-      return
-    }
-
-    if (observacaoSemAtendimento.trim() === "") {
-      toast.warning("Informe uma observação.")
-      return
-    }
-
-    try {
-      setAcaoEmAndamento(`sem_atendimento_${atendimentoSemAtendimentoId}`)
-
-      await updateDoc(doc(db, "atendimentos", atendimentoSemAtendimentoId), {
-        status: "finalizado",
-        fim_atendimento: serverTimestamp(),
-        observacao_sem_atendimento: observacaoSemAtendimento.trim(),
-        atualizado_em: serverTimestamp(),
-        atualizado_por: usuarioLogado
-      })
-
-      await registrarHistorico(
-        atendimentoSemAtendimentoId,
-        "atendimento_finalizado_sem_atendimento",
-        observacaoSemAtendimento.trim()
-      )
-
-      toast.success("Atendimento finalizado sem atendimento.")
-
-      setModalSemAtendimentoAberto(false)
-      setAtendimentoSemAtendimentoId("")
-      setObservacaoSemAtendimento("")
-    } catch (error) {
-      console.error(error)
-      toast.error("Erro ao finalizar atendimento.")
     } finally {
       setAcaoEmAndamento("")
     }
@@ -2174,19 +2124,13 @@ export default function AtendimentosPage() {
                         atendimento.status === "em_atendimento") &&
                       atendimento.id && (
                         <button
-                          onClick={() => {
-                            setAtendimentoSemAtendimentoId(atendimento.id!)
-                            setObservacaoSemAtendimento("")
-                            setModalSemAtendimentoAberto(true)
-                          }}
+                          onClick={() => finalizarAtendimento(atendimento.id!)}
                           disabled={acaoEmAndamento === `finalizar_${atendimento.id}`}
                           className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                         >
                           {acaoEmAndamento === `finalizar_${atendimento.id}`
                             ? "Finalizando..."
-                            : atendimento.status === "chamado"
-                              ? "Finalizar sem iniciar"
-                              : "Finalizar"}
+                            : "Finalizar"}
                         </button>
                       )}
 
@@ -2283,53 +2227,7 @@ export default function AtendimentosPage() {
         </div>
       )}
 
-      {/* MODAL FINALIZAR SEM ATENDIMENTO */}
-
-      {modalSemAtendimentoAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Finalizar sem atendimento
-            </h2>
-
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Informe o motivo. Esta observação ficará registrada no histórico.
-            </p>
-
-            <textarea
-              value={observacaoSemAtendimento}
-              onChange={(e) => setObservacaoSemAtendimento(e.target.value)}
-              placeholder="Exemplo: Associado foi chamado, mas não compareceu."
-              className="mt-4 min-h-30 w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-            />
-
-            <div className="mt-5 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalSemAtendimentoAberto(false)
-                  setAtendimentoSemAtendimentoId("")
-                  setObservacaoSemAtendimento("")
-                }}
-                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
-              >
-                Voltar
-              </button>
-
-              <button
-                type="button"
-                onClick={finalizarSemAtendimento}
-                className="h-10 rounded-lg border border-rose-500/40 bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-500"
-              >
-                Confirmar finalização
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* MODAL ENCAMINHAR ATENDIMENTO */}
-
       {modalEncaminharAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
