@@ -37,7 +37,8 @@ const itensMenu: ItemMenu[] = [
   { nome: "Cargos", href: "/sistema/cargos", grupo: "CADASTROS" },
   { nome: "Profissionais", href: "/sistema/profissionais", grupo: "CADASTROS" },
   { nome: "Convênios", href: "/sistema/convenios", grupo: "CADASTROS" },
-  { nome: "Usuários", href: "/sistema/usuarios", grupo: "ADMINISTRAÇÃO" }
+  { nome: "Usuários", href: "/sistema/usuarios", grupo: "ADMINISTRAÇÃO" },
+  { nome: "Escala de Atendimentos", href: "/sistema/escala-atendimentos", grupo: "ADMINISTRAÇÃO" }
 ]
 
 export default function SistemaLayout({
