@@ -999,14 +999,16 @@ export default function AtendimentosPage() {
       return
     }
 
+    if (atendimentoAtual.status !== "em_atendimento") {
+  toast.warning("Só é possível finalizar atendimento que já foi iniciado.")
+  return
+}
+
     try {
       setAcaoEmAndamento(`finalizar_${id}`)
 
       await updateDoc(doc(db, "atendimentos", id), {
         status: "finalizado",
-
-        inicio_atendimento:
-          atendimentoAtual.inicio_atendimento || serverTimestamp(),
 
         fim_atendimento: serverTimestamp(),
         atualizado_em: serverTimestamp(),
@@ -1015,9 +1017,7 @@ export default function AtendimentosPage() {
 
       await registrarHistorico(
         id,
-        atendimentoAtual.status === "chamado"
-          ? "atendimento_finalizado_sem_inicio"
-          : "atendimento_finalizado"
+        "atendimento_finalizado"
       )
 
       toast.success("Atendimento finalizado.")
@@ -2120,8 +2120,7 @@ export default function AtendimentosPage() {
                       )}
 
                     {podeOperarAtendimento &&
-                      (atendimento.status === "chamado" ||
-                        atendimento.status === "em_atendimento") &&
+                      atendimento.status === "em_atendimento" &&
                       atendimento.id && (
                         <button
                           onClick={() => finalizarAtendimento(atendimento.id!)}
