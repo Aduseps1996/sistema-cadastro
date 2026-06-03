@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.alternarStatusUsuario = exports.redefinirSenhaUsuario = exports.atualizarUsuario = exports.criarUsuario = void 0;

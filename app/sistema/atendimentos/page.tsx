@@ -12,7 +12,8 @@ import {
   orderBy,
   doc,
   updateDoc,
-  setDoc
+  setDoc,
+  type Timestamp
 } from "firebase/firestore"
 
 import { db, auth } from "../../../lib/firebase"
@@ -87,9 +88,9 @@ type Atendimento = {
   motivo_categoria?: string
   motivo_detalhe?: string | null
   observacao?: string
-  data_hora_chegada?: any
-  inicio_atendimento?: any
-  fim_atendimento?: any
+  data_hora_chegada?: Timestamp | null
+  inicio_atendimento?: Timestamp | null
+  fim_atendimento?: Timestamp | null
 }
 
 // =====================================================
@@ -219,7 +220,6 @@ export default function AtendimentosPage() {
   // ESTADOS DE CHAMADA DE PROFISSIONAL
   // =====================================================
   const [profissionalChamadaId, setProfissionalChamadaId] = useState("")
-  const [buscaProfissionalChamada, setBuscaProfissionalChamada] = useState("")
 
   // =====================================================
   // ESTADOS DE DADOS CARREGADOS DO FIRESTORE
@@ -826,9 +826,9 @@ export default function AtendimentosPage() {
         profissional: buscarProfissional(profissionalResponsavel)?.nome || "",
 
         criado_em: serverTimestamp(),
-        criado_em_ms: Date.now(),
+        criado_em_ms: new Date().getTime(),
 
-        repeticao_id: Date.now()
+        repeticao_id: new Date().getTime()
       })
 
       await registrarHistorico(
@@ -1200,7 +1200,7 @@ export default function AtendimentosPage() {
   // UTILITÁRIOS DE TEMPO
   // =====================================================
 
-  function calcularTempo(timestamp: any) {
+  function calcularTempo(timestamp?: Timestamp | null) {
     if (!timestamp?.seconds) return ""
 
     const agora = new Date().getTime()
@@ -1220,7 +1220,7 @@ export default function AtendimentosPage() {
   // UTILITÁRIOS DE DURAÇÃO
   // =====================================================
 
-  function calcularDuracao(inicio: any, fim?: any) {
+  function calcularDuracao(inicio?: Timestamp | null, fim?: Timestamp | null) {
     if (!inicio?.seconds) return ""
 
     const inicioMs = inicio.seconds * 1000

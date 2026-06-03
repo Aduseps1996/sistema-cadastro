@@ -33,19 +33,15 @@ export function TemaProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [tema, setTema] = useState<Tema>("dark")
+  const [tema, setTema] = useState<Tema>(() => {
+    if (typeof window === "undefined") return "dark"
+    return (localStorage.getItem("tema") as Tema) || "dark"
+  })
 
   useEffect(() => {
-    const temaSalvo =
-      localStorage.getItem("tema") as Tema | null
-
-    const temaInicial = temaSalvo || "dark"
-
-    setTema(temaInicial)
-
     document.documentElement.classList.remove("dark", "light")
-    document.documentElement.classList.add(temaInicial)
-  }, [])
+    document.documentElement.classList.add(tema)
+  }, [tema])
 
   function alternarTema() {
     const novoTema =

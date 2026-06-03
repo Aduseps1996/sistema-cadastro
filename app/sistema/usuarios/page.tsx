@@ -102,8 +102,6 @@ export default function UsuariosPage() {
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
   const [profissionalIdEdicao, setProfissionalIdEdicao] = useState("")
 
-  const [carregando, setCarregando] = useState(false)
-
   // =====================================================
   // CONSULTA EM TEMPO REAL
   // =====================================================

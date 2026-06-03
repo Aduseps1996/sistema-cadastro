@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import {
   collection,
@@ -9,7 +9,8 @@ import {
   query,
   doc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  type Timestamp
 } from "firebase/firestore"
 
 import { db } from "../../../lib/firebase"
@@ -56,9 +57,9 @@ type Atendimento = {
   motivo?: string
   motivo_categoria?: string
   motivo_detalhe?: string | null
-  data_hora_chegada?: any
-  inicio_atendimento?: any
-  fim_atendimento?: any
+  data_hora_chegada?: Timestamp | null
+  inicio_atendimento?: Timestamp | null
+  fim_atendimento?: Timestamp | null
 }
 
 const statusOpcoes = [
@@ -83,8 +84,10 @@ export default function InicioPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
 
-  const [dataInicial, setDataInicial] = useState("")
-  const [dataFinal, setDataFinal] = useState("")
+  const hojePadrao = format(new Date(), "yyyy-MM-dd")
+
+  const [dataInicial, setDataInicial] = useState(hojePadrao)
+  const [dataFinal, setDataFinal] = useState(hojePadrao)
   const [busca, setBusca] = useState("")
   const [statusFiltro, setStatusFiltro] = useState("todos")
   const [tipoFiltro, setTipoFiltro] = useState("todos")
@@ -196,21 +199,33 @@ export default function InicioPage() {
   }, [])
 
   /* Funções de busca de relacionamentos */
-  function buscarPessoa(id?: string | null) {
-    return pessoas.find((pessoa) => pessoa.id === id)
-  }
+  const buscarPessoa = useCallback(
+    (id?: string | null) => {
+      return pessoas.find((pessoa) => pessoa.id === id)
+    },
+    [pessoas]
+  )
 
-  function buscarAssociado(id?: string | null) {
-    return associados.find((associado) => associado.id === id)
-  }
+  const buscarAssociado = useCallback(
+    (id?: string | null) => {
+      return associados.find((associado) => associado.id === id)
+    },
+    [associados]
+  )
 
-  function buscarProfissional(id?: string | null) {
-    return profissionais.find((profissional) => profissional.id === id)
-  }
+  const buscarProfissional = useCallback(
+    (id?: string | null) => {
+      return profissionais.find((profissional) => profissional.id === id)
+    },
+    [profissionais]
+  )
 
-  function buscarConvenio(id?: string | null) {
-    return convenios.find((convenio) => convenio.id === id)
-  }
+  const buscarConvenio = useCallback(
+    (id?: string | null) => {
+      return convenios.find((convenio) => convenio.id === id)
+    },
+    [convenios]
+  )
 
   /* Funções de formatação e datas */
   function dataDoAtendimento(atendimento: Atendimento) {
@@ -339,17 +354,17 @@ export default function InicioPage() {
     })
   }, [
     atendimentos,
-    pessoas,
-    associados,
-    profissionais,
-    convenios,
     dataInicial,
     dataFinal,
     busca,
     statusFiltro,
     tipoFiltro,
     profissionalFiltro,
-    convenioFiltro
+    convenioFiltro,
+    buscarPessoa,
+    buscarAssociado,
+    buscarProfissional,
+    buscarConvenio
   ])
 
   /* Paginação dos resultados */
@@ -369,18 +384,6 @@ export default function InicioPage() {
     setPaginaAtual(novaPagina)
   }
 
-  /* Resetar página sempre que filtros mudarem */
-  useEffect(() => {
-    setPaginaAtual(1)
-  }, [
-    dataInicial,
-    dataFinal,
-    busca,
-    statusFiltro,
-    tipoFiltro,
-    profissionalFiltro,
-    convenioFiltro
-  ])
 
   /* Totais por status para o painel */
   const totalAguardando =
@@ -397,7 +400,7 @@ export default function InicioPage() {
 
 
   /* Exportação de dados CSV */
-  function formatarTimestampCSV(timestamp: any) {
+  function formatarTimestampCSV(timestamp?: Timestamp | null) {
     if (!timestamp?.seconds) return ""
 
     return format(
@@ -519,7 +522,7 @@ export default function InicioPage() {
     return `${horas}h ${minutos}min`
   }
 
-  function formatarTimestamp(timestamp: any) {
+  function formatarTimestamp(timestamp?: Timestamp | null) {
     if (!timestamp?.seconds) return "-"
 
     return format(
@@ -605,6 +608,10 @@ export default function InicioPage() {
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
               Refine a consulta por data, status, tipo, profissional ou convênio.
             </p>
+
+            <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+              Por padrão, a página mostra apenas os atendimentos de hoje.
+            </p>
           </div>
 
           <button
@@ -625,7 +632,10 @@ export default function InicioPage() {
               type="text"
               placeholder="dd/mm/aaaa"
               value={dataInicial}
-              onChange={(e) => setDataInicial(e.target.value)}
+              onChange={(e) => {
+                setDataInicial(e.target.value)
+                setPaginaAtual(1)
+              }}
               onFocus={(e) => {
                 e.currentTarget.type = "date"
                 e.currentTarget.showPicker?.()
@@ -648,7 +658,10 @@ export default function InicioPage() {
               type="text"
               placeholder="dd/mm/aaaa"
               value={dataFinal}
-              onChange={(e) => setDataFinal(e.target.value)}
+              onChange={(e) => {
+                setDataFinal(e.target.value)
+                setPaginaAtual(1)
+              }}
               onFocus={(e) => {
                 e.currentTarget.type = "date"
                 e.currentTarget.showPicker?.()
@@ -671,7 +684,10 @@ export default function InicioPage() {
               type="text"
               placeholder="Nome, matrícula, observação..."
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => {
+                setBusca(e.target.value)
+                setPaginaAtual(1)
+              }}
               className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
           </div>
@@ -683,7 +699,10 @@ export default function InicioPage() {
 
             <select
               value={statusFiltro}
-              onChange={(e) => setStatusFiltro(e.target.value)}
+              onChange={(e) => {
+                setStatusFiltro(e.target.value)
+                setPaginaAtual(1)
+              }}
               className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             >
               {statusOpcoes.map((status) => (
@@ -701,7 +720,10 @@ export default function InicioPage() {
 
             <select
               value={tipoFiltro}
-              onChange={(e) => setTipoFiltro(e.target.value)}
+              onChange={(e) => {
+                setTipoFiltro(e.target.value)
+                setPaginaAtual(1)
+              }}
               className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             >
               {tiposOpcoes.map((tipo) => (
@@ -719,7 +741,10 @@ export default function InicioPage() {
 
             <select
               value={profissionalFiltro}
-              onChange={(e) => setProfissionalFiltro(e.target.value)}
+              onChange={(e) => {
+                setProfissionalFiltro(e.target.value)
+                setPaginaAtual(1)
+              }}
               className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             >
               <option value="todos">Todos</option>
@@ -739,7 +764,10 @@ export default function InicioPage() {
 
             <select
               value={convenioFiltro}
-              onChange={(e) => setConvenioFiltro(e.target.value)}
+              onChange={(e) => {
+                setConvenioFiltro(e.target.value)
+                setPaginaAtual(1)
+              }}
               className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
             >
               <option value="todos">Todos</option>
