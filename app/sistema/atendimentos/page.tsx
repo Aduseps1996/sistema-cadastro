@@ -182,6 +182,17 @@ export default function AtendimentosPage() {
   const [motivoDetalhe, setMotivoDetalhe] = useState("")
   const [observacao, setObservacao] = useState("")
 
+
+
+  const [modalSemAtendimentoAberto, setModalSemAtendimentoAberto] = useState(false)
+  const [atendimentoSemAtendimentoId, setAtendimentoSemAtendimentoId] = useState("")
+  const [observacaoSemAtendimento, setObservacaoSemAtendimento] = useState("")
+
+  const [modalEncaminharAberto, setModalEncaminharAberto] = useState(false)
+  const [atendimentoEncaminharId, setAtendimentoEncaminharId] = useState("")
+  const [profissionalEncaminharId, setProfissionalEncaminharId] = useState("")
+  const [motivoEncaminhamento, setMotivoEncaminhamento] = useState("")
+
   // =====================================================
   // INDICADOR DE AÇÃO EM ANDAMENTO
   // =====================================================
@@ -457,28 +468,28 @@ export default function AtendimentosPage() {
   }
 
   function preencherDadosPorMatricula(matriculaInformada: string) {
-  const valor = matriculaInformada.trim()
+    const valor = matriculaInformada.trim()
 
-  if (valor === "") {
+    if (valor === "") {
+      setMatriculaNaoEncontrada(false)
+      return
+    }
+
+    const associado = buscarAssociadoPorMatricula(valor)
+
+    if (!associado) {
+      setMatriculaNaoEncontrada(true)
+      return
+    }
+
+    const pessoa = buscarPessoa(associado.pessoa_id)
+    const convenio = buscarConvenio(associado.convenio_id)
+
+    setNomePessoa(pessoa?.nome || "")
+    setConvenioId(associado.convenio_id || "")
+    setBuscaConvenio(convenio?.nome || "")
     setMatriculaNaoEncontrada(false)
-    return
   }
-
-  const associado = buscarAssociadoPorMatricula(valor)
-
-  if (!associado) {
-    setMatriculaNaoEncontrada(true)
-    return
-  }
-
-  const pessoa = buscarPessoa(associado.pessoa_id)
-  const convenio = buscarConvenio(associado.convenio_id)
-
-  setNomePessoa(pessoa?.nome || "")
-  setConvenioId(associado.convenio_id || "")
-  setBuscaConvenio(convenio?.nome || "")
-  setMatriculaNaoEncontrada(false)
-}
 
   function profissionalDoUsuarioLogado() {
     if (!usuarioSistema?.profissional_id) return null
@@ -818,7 +829,8 @@ export default function AtendimentosPage() {
         nome: buscarPessoa(atendimentoSelecionado.pessoa_id)?.nome || "",
         matricula: buscarAssociado(atendimentoSelecionado.associado_id)?.matricula || "",
         profissional: buscarProfissional(profissionalResponsavel)?.nome || "",
-        criado_em: serverTimestamp()
+        criado_em: serverTimestamp(),
+        repeticao_id: Date.now()
       })
 
       await registrarHistorico(
@@ -837,6 +849,64 @@ export default function AtendimentosPage() {
     } catch (error) {
       console.error(error)
       toast.error("Erro ao chamar próximo atendimento.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
+  }
+
+  // =====================================================
+  // AÇÃO: CHAMAR NOVAMENTE UM ATENDIMENTO
+  // =====================================================
+
+  async function chamarNovamente(atendimento: Atendimento) {
+    if (!podeOperarAtendimento) {
+      toast.warning("Você não tem permissão para chamar atendimento.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
+    const atendimentoId = atendimento.id
+
+    if (!atendimentoId) {
+      toast.error("Atendimento não identificado.")
+      return
+    }
+
+    if (!atendimento.profissional_id) {
+      toast.warning("Atendimento sem profissional definido.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`chamar_novamente_${atendimentoId}`)
+
+      await setDoc(doc(db, "painel_chamadas", "atual"), {
+        ativo: true,
+        atendimento_id: atendimentoId,
+        nome: buscarPessoa(atendimento.pessoa_id)?.nome || "",
+        matricula: buscarAssociado(atendimento.associado_id)?.matricula || "",
+        profissional: buscarProfissional(atendimento.profissional_id)?.nome || "",
+        criado_em: serverTimestamp(),
+        repeticao_id: Date.now()
+      })
+
+      await updateDoc(doc(db, "atendimentos", atendimentoId), {
+        data_hora_ultima_chamada: serverTimestamp(),
+        ultima_chamada_id: Date.now(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoId,
+        "atendimento_chamado_novamente"
+      )
+
+      toast.success("Atendimento chamado novamente.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao chamar novamente.")
     } finally {
       setAcaoEmAndamento("")
     }
@@ -885,84 +955,88 @@ export default function AtendimentosPage() {
   // =====================================================
 
   async function iniciarAtendimento(id: string) {
-  if (!podeOperarAtendimento) {
-    toast.warning("Você não tem permissão para iniciar atendimento.")
-    return
+    if (!podeOperarAtendimento) {
+      toast.warning("Você não tem permissão para iniciar atendimento.")
+      return
+    }
+
+    if (acaoEmAndamento) return
+
+    try {
+      setAcaoEmAndamento(`iniciar_${id}`)
+
+      await updateDoc(doc(db, "atendimentos", id), {
+        status: "em_atendimento",
+        inicio_atendimento: serverTimestamp(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(id, "atendimento_iniciado")
+
+      toast.success("Atendimento iniciado.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao iniciar atendimento.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
-
-  if (acaoEmAndamento) return
-
-  try {
-    setAcaoEmAndamento(`iniciar_${id}`)
-
-    await updateDoc(doc(db, "atendimentos", id), {
-      status: "em_atendimento",
-      inicio_atendimento: serverTimestamp(),
-      atualizado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado
-    })
-
-    await registrarHistorico(id, "atendimento_iniciado")
-
-    toast.success("Atendimento iniciado.")
-  } catch (error) {
-    console.error(error)
-    toast.error("Erro ao iniciar atendimento.")
-  } finally {
-    setAcaoEmAndamento("")
-  }
-}
 
   // =====================================================
   // AÇÃO: FINALIZAR ATENDIMENTO
   // =====================================================
 
   async function finalizarAtendimento(id: string) {
-  if (!podeOperarAtendimento) {
-    toast.warning("Você não tem permissão para finalizar atendimento.")
-    return
-  }
+    if (!podeOperarAtendimento) {
+      toast.warning("Você não tem permissão para finalizar atendimento.")
+      return
+    }
 
-  if (acaoEmAndamento) return
+    if (acaoEmAndamento) return
 
-  const atendimentoAtual = atendimentos.find(
-    (atendimento) => atendimento.id === id
-  )
-
-  if (!atendimentoAtual) {
-    toast.error("Atendimento não encontrado.")
-    return
-  }
-
-  try {
-    setAcaoEmAndamento(`finalizar_${id}`)
-
-    await updateDoc(doc(db, "atendimentos", id), {
-      status: "finalizado",
-
-      inicio_atendimento:
-        atendimentoAtual.inicio_atendimento || serverTimestamp(),
-
-      fim_atendimento: serverTimestamp(),
-      atualizado_em: serverTimestamp(),
-      atualizado_por: usuarioLogado
-    })
-
-    await registrarHistorico(
-      id,
-      atendimentoAtual.status === "chamado"
-        ? "atendimento_finalizado_sem_inicio"
-        : "atendimento_finalizado"
+    const atendimentoAtual = atendimentos.find(
+      (atendimento) => atendimento.id === id
     )
 
-    toast.success("Atendimento finalizado.")
-  } catch (error) {
-    console.error(error)
-    toast.error("Erro ao finalizar atendimento. Tente novamente.")
-  } finally {
-    setAcaoEmAndamento("")
+    if (!atendimentoAtual) {
+      toast.error("Atendimento não encontrado.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`finalizar_${id}`)
+
+      await updateDoc(doc(db, "atendimentos", id), {
+        status: "finalizado",
+
+        inicio_atendimento:
+          atendimentoAtual.inicio_atendimento || serverTimestamp(),
+
+        fim_atendimento: serverTimestamp(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        id,
+        atendimentoAtual.status === "chamado"
+          ? "atendimento_finalizado_sem_inicio"
+          : "atendimento_finalizado"
+      )
+
+      toast.success("Atendimento finalizado.")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao finalizar atendimento. Tente novamente.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
   }
-}
+
+  // ====================================================
+  // AÇÃO: FINALIZAR ATENDIMENTO PENDENTE POSTERIORMENTE
+  // =====================================================
 
   async function finalizarAtendimentoPendente() {
     if (!atendimentoPendenteId) {
@@ -1000,6 +1074,115 @@ export default function AtendimentosPage() {
     } catch (error) {
       console.error(error)
       toast.error("Erro ao encerrar atendimento pendente.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
+  }
+
+  // =====================================================
+  // AÇÃO: FINALIZAR ATENDIMENTO SEM ATENDIMENTO
+  // =====================================================
+
+  async function finalizarSemAtendimento() {
+    if (!atendimentoSemAtendimentoId) {
+      toast.error("Atendimento não identificado.")
+      return
+    }
+
+    if (observacaoSemAtendimento.trim() === "") {
+      toast.warning("Informe uma observação.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`sem_atendimento_${atendimentoSemAtendimentoId}`)
+
+      await updateDoc(doc(db, "atendimentos", atendimentoSemAtendimentoId), {
+        status: "finalizado",
+        fim_atendimento: serverTimestamp(),
+        observacao_sem_atendimento: observacaoSemAtendimento.trim(),
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoSemAtendimentoId,
+        "atendimento_finalizado_sem_atendimento",
+        observacaoSemAtendimento.trim()
+      )
+
+      toast.success("Atendimento finalizado sem atendimento.")
+
+      setModalSemAtendimentoAberto(false)
+      setAtendimentoSemAtendimentoId("")
+      setObservacaoSemAtendimento("")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao finalizar atendimento.")
+    } finally {
+      setAcaoEmAndamento("")
+    }
+  }
+
+  // =====================================================
+  // AÇÃO: ENCAMINHAR ATENDIMENTO PARA OUTRO PROFISSIONAL
+  // =====================================================
+
+  async function encaminharAtendimento() {
+    if (!atendimentoEncaminharId) {
+      toast.error("Atendimento não identificado.")
+      return
+    }
+
+    if (profissionalEncaminharId === "") {
+      toast.warning("Selecione o profissional de destino.")
+      return
+    }
+
+    if (motivoEncaminhamento.trim() === "") {
+      toast.warning("Informe o motivo do encaminhamento.")
+      return
+    }
+
+    const atendimentoAtual = atendimentos.find(
+      (atendimento) => atendimento.id === atendimentoEncaminharId
+    )
+
+    if (!atendimentoAtual) {
+      toast.error("Atendimento não encontrado.")
+      return
+    }
+
+    try {
+      setAcaoEmAndamento(`encaminhar_${atendimentoEncaminharId}`)
+
+      await updateDoc(doc(db, "atendimentos", atendimentoEncaminharId), {
+        status: "aguardando",
+        profissional_id: null,
+        profissional_preferencial_id: profissionalEncaminharId,
+        encaminhado_de_id: atendimentoAtual.profissional_id || null,
+        encaminhado_para_id: profissionalEncaminharId,
+        motivo_encaminhamento: motivoEncaminhamento.trim(),
+        inicio_atendimento: null,
+        atualizado_em: serverTimestamp(),
+        atualizado_por: usuarioLogado
+      })
+
+      await registrarHistorico(
+        atendimentoEncaminharId,
+        "atendimento_encaminhado",
+        motivoEncaminhamento.trim()
+      )
+
+      toast.success("Atendimento encaminhado.")
+
+      setModalEncaminharAberto(false)
+      setAtendimentoEncaminharId("")
+      setProfissionalEncaminharId("")
+      setMotivoEncaminhamento("")
+    } catch (error) {
+      console.error(error)
+      toast.error("Erro ao encaminhar atendimento.")
     } finally {
       setAcaoEmAndamento("")
     }
@@ -1220,12 +1403,12 @@ export default function AtendimentosPage() {
   }
 
   const conveniosFiltrados = convenios
-  .filter((convenio) => convenio.ativo)
-  .filter((convenio) =>
-    convenio.nome
-      .toLowerCase()
-      .includes(buscaConvenio.toLowerCase().trim())
-  )
+    .filter((convenio) => convenio.ativo)
+    .filter((convenio) =>
+      convenio.nome
+        .toLowerCase()
+        .includes(buscaConvenio.toLowerCase().trim())
+    )
 
   return (
     <div className="space-y-6">
@@ -1359,55 +1542,55 @@ export default function AtendimentosPage() {
                   </label>
 
                   <div className="relative">
-  <input
-    type="text"
-    placeholder={
-      tipo === "associado"
-        ? "Digite o convênio"
-        : "Convênio opcional"
-    }
-    value={buscaConvenio}
-    onChange={(e) => {
-      setBuscaConvenio(e.target.value)
-      setConvenioId("")
-      setMostrarListaConvenios(true)
-    }}
-    onFocus={() => setMostrarListaConvenios(true)}
-    onBlur={() => {
-      setTimeout(() => {
-        setMostrarListaConvenios(false)
-      }, 150)
-    }}
-    className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
-  />
+                    <input
+                      type="text"
+                      placeholder={
+                        tipo === "associado"
+                          ? "Digite o convênio"
+                          : "Convênio opcional"
+                      }
+                      value={buscaConvenio}
+                      onChange={(e) => {
+                        setBuscaConvenio(e.target.value)
+                        setConvenioId("")
+                        setMostrarListaConvenios(true)
+                      }}
+                      onFocus={() => setMostrarListaConvenios(true)}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setMostrarListaConvenios(false)
+                        }, 150)
+                      }}
+                      className="h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                    />
 
-  {mostrarListaConvenios && buscaConvenio.trim() !== "" && (
-    <div className="absolute z-50 mt-2 max-h-56 w-full overflow-auto rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900">
-      {conveniosFiltrados.length === 0 && (
-        <p className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
-          Nenhum convênio encontrado.
-        </p>
-      )}
+                    {mostrarListaConvenios && buscaConvenio.trim() !== "" && (
+                      <div className="absolute z-50 mt-2 max-h-56 w-full overflow-auto rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-zinc-700 dark:bg-zinc-900">
+                        {conveniosFiltrados.length === 0 && (
+                          <p className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                            Nenhum convênio encontrado.
+                          </p>
+                        )}
 
-      {conveniosFiltrados.map((convenio) => (
-        <button
-          key={convenio.id}
-          type="button"
-          onMouseDown={() => {
-            setConvenioId(convenio.id || "")
-            setBuscaConvenio(convenio.nome)
-            setMostrarListaConvenios(false)
-          }}
-          className="w-full px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {convenio.nome}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+                        {conveniosFiltrados.map((convenio) => (
+                          <button
+                            key={convenio.id}
+                            type="button"
+                            onMouseDown={() => {
+                              setConvenioId(convenio.id || "")
+                              setBuscaConvenio(convenio.nome)
+                              setMostrarListaConvenios(false)
+                            }}
+                            className="w-full px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                          >
+                            {convenio.nome}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
+
               </div>
             </div>
 
@@ -1960,6 +2143,22 @@ export default function AtendimentosPage() {
                       atendimento.status === "chamado" &&
                       atendimento.id && (
                         <button
+                          onClick={() => chamarNovamente(atendimento)}
+                          disabled={
+                            acaoEmAndamento === `chamar_novamente_${atendimento.id}`
+                          }
+                          className="h-10 w-full rounded-lg border border-violet-500/40 bg-violet-600 px-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {acaoEmAndamento === `chamar_novamente_${atendimento.id}`
+                            ? "Chamando..."
+                            : "Chamar novamente"}
+                        </button>
+                      )}
+
+                    {podeOperarAtendimento &&
+                      atendimento.status === "chamado" &&
+                      atendimento.id && (
+                        <button
                           onClick={() => iniciarAtendimento(atendimento.id!)}
                           disabled={acaoEmAndamento === `iniciar_${atendimento.id}`}
                           className="h-10 w-full rounded-lg border border-blue-500/40 bg-blue-600 px-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1975,7 +2174,11 @@ export default function AtendimentosPage() {
                         atendimento.status === "em_atendimento") &&
                       atendimento.id && (
                         <button
-                          onClick={() => finalizarAtendimento(atendimento.id!)}
+                          onClick={() => {
+                            setAtendimentoSemAtendimentoId(atendimento.id!)
+                            setObservacaoSemAtendimento("")
+                            setModalSemAtendimentoAberto(true)
+                          }}
                           disabled={acaoEmAndamento === `finalizar_${atendimento.id}`}
                           className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                         >
@@ -1985,7 +2188,24 @@ export default function AtendimentosPage() {
                               ? "Finalizar sem iniciar"
                               : "Finalizar"}
                         </button>
-                    )}
+                      )}
+
+                    {podeOperarAtendimento &&
+                      (atendimento.status === "chamado" ||
+                        atendimento.status === "em_atendimento") &&
+                      atendimento.id && (
+                        <button
+                          onClick={() => {
+                            setAtendimentoEncaminharId(atendimento.id!)
+                            setProfissionalEncaminharId("")
+                            setMotivoEncaminhamento("")
+                            setModalEncaminharAberto(true)
+                          }}
+                          className="h-10 w-full rounded-lg border border-orange-500/40 bg-orange-600 px-3 text-sm font-semibold text-white transition hover:bg-orange-500"
+                        >
+                          Encaminhar
+                        </button>
+                      )}
 
                     {podeOperarAtendimento &&
                       atendimento.status !== "finalizado" &&
@@ -2057,6 +2277,114 @@ export default function AtendimentosPage() {
                 {acaoEmAndamento.startsWith("finalizar_pendente_")
                   ? "Encerrando..."
                   : "Confirmar encerramento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL FINALIZAR SEM ATENDIMENTO */}
+
+      {modalSemAtendimentoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Finalizar sem atendimento
+            </h2>
+
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Informe o motivo. Esta observação ficará registrada no histórico.
+            </p>
+
+            <textarea
+              value={observacaoSemAtendimento}
+              onChange={(e) => setObservacaoSemAtendimento(e.target.value)}
+              placeholder="Exemplo: Associado foi chamado, mas não compareceu."
+              className="mt-4 min-h-30 w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            />
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalSemAtendimentoAberto(false)
+                  setAtendimentoSemAtendimentoId("")
+                  setObservacaoSemAtendimento("")
+                }}
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={finalizarSemAtendimento}
+                className="h-10 rounded-lg border border-rose-500/40 bg-rose-600 px-4 text-sm font-semibold text-white transition hover:bg-rose-500"
+              >
+                Confirmar finalização
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ENCAMINHAR ATENDIMENTO */}
+
+      {modalEncaminharAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Encaminhar atendimento
+            </h2>
+
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Selecione o novo profissional e informe o motivo.
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <Select
+                value={profissionalEncaminharId}
+                onChange={(e) => setProfissionalEncaminharId(e.target.value)}
+              >
+                <option value="">Selecione o profissional</option>
+
+                {profissionais
+                  .filter((profissional) => profissional.ativo)
+                  .map((profissional) => (
+                    <option key={profissional.id} value={profissional.id}>
+                      {profissional.nome}
+                    </option>
+                  ))}
+              </Select>
+
+              <textarea
+                value={motivoEncaminhamento}
+                onChange={(e) => setMotivoEncaminhamento(e.target.value)}
+                placeholder="Exemplo: Associado solicitou atendimento por outro profissional."
+                className="min-h-30 w-full resize-none rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              />
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalEncaminharAberto(false)
+                  setAtendimentoEncaminharId("")
+                  setProfissionalEncaminharId("")
+                  setMotivoEncaminhamento("")
+                }}
+                className="h-10 rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={encaminharAtendimento}
+                className="h-10 rounded-lg border border-orange-500/40 bg-orange-600 px-4 text-sm font-semibold text-white transition hover:bg-orange-500"
+              >
+                Confirmar encaminhamento
               </button>
             </div>
           </div>
