@@ -82,6 +82,12 @@ export default function CargosPage() {
   const [nomeEdicao, setNomeEdicao] = useState("")
 
 
+  /* Configurar título da página */
+    useEffect(() => {
+    document.title = "Controle de Atendimento - Cargos"
+  }, [])
+
+
   // =====================================================
   // BUSCA EM TEMPO REAL DOS CARGOS
   // =====================================================

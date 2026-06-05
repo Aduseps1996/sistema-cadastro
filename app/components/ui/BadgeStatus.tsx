@@ -4,7 +4,7 @@ type BadgeStatusProps = {
 
 export function BadgeStatus({ status }: BadgeStatusProps) {
 
-  const statusFormatado = status.toLowerCase()
+  const statusFormatado = (status || "inativo").toLowerCase()
 
   const estilos: Record<string, string> = {
     ativo: "bg-green-500/10 text-green-700 border-green-500/30 dark:text-green-300",

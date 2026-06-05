@@ -100,6 +100,12 @@ export default function AssociadosPage() {
 
 
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Associados"
+  }, [])
+
+
   // =====================================================
   // BUSCA DE PESSOAS
   // =====================================================
@@ -356,8 +362,6 @@ export default function AssociadosPage() {
     setPessoaIdEdicao("")
     setMatriculaEdicao("")
     setConvenioIdEdicao("")
-
-    toast.success("Edição cancelada.")
   }
 
   // =====================================================

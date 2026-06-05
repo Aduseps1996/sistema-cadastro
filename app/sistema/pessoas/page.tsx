@@ -81,6 +81,11 @@ export default function PessoasPage() {
     usuarioSistema?.perfil === "Administrador" ||
     usuarioSistema?.perfil === "Recepção"
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Pessoas"
+  }, [])
+
   // =====================================================
   // CONSULTA EM TEMPO REAL
   // =====================================================
@@ -236,8 +241,6 @@ export default function PessoasPage() {
     setTelefoneEdicao("")
     setEmailEdicao("")
     setCpfEdicao("")
-
-    toast.success("Edição cancelada.")
   }
 
   // =====================================================

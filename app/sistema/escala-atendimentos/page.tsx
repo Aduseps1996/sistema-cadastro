@@ -253,6 +253,11 @@ O assistente que estiver no atendimento deve seguir os seguintes horários, 8 à
     })
   }
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Escala de Atendimentos"
+  }, [])
+
   useEffect(() => {
     const consulta = query(
       collection(db, "profissionais"),

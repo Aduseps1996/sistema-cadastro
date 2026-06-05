@@ -272,6 +272,13 @@ export default function AtendimentosPage() {
   const [notificacoesJaEnviadas, setNotificacoesJaEnviadas] = useState<string[]>([])
 
 
+
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Atendimentos"
+  }, [])
+
+
   // =====================================================
   // AUTENTICAÇÃO E USUÁRIO LOGADO
   // =====================================================
@@ -810,6 +817,16 @@ export default function AtendimentosPage() {
 
     if (tipo === "associado" && convenioId === "") {
       toast.warning("Selecione o convênio do associado.")
+      return
+    }
+
+    if (usarRepresentante && nomeRepresentante.trim() === "") {
+      toast.warning("Informe o nome do representante.")
+      return
+    }
+
+    if (usarRepresentante && tipoRepresentante === "") {
+      toast.warning("Selecione o tipo de representante.")
       return
     }
 
@@ -2560,9 +2577,12 @@ export default function AtendimentosPage() {
               <button
                 type="button"
                 onClick={encaminharAtendimento}
-                className="h-10 rounded-lg border border-orange-500/40 bg-orange-600 px-4 text-sm font-semibold text-white transition hover:bg-orange-500"
+                disabled={acaoEmAndamento.startsWith("encaminhar_")}
+                className="h-10 rounded-lg border border-orange-500/40 bg-orange-600 px-4 text-sm font-semibold text-white transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Confirmar encaminhamento
+                {acaoEmAndamento.startsWith("encaminhar_")
+                  ? "Encaminhando..."
+                  : "Confirmar encaminhamento"}
               </button>
             </div>
           </div>

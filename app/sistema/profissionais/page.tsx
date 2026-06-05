@@ -66,6 +66,13 @@ export default function ProfissionaisPage() {
   // =====================================================
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
+
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Profissionais"
+  }, [])
+
+
   useEffect(() => {
     const consultaCargos = query(
       collection(db, "cargos"),
@@ -237,8 +244,6 @@ export default function ProfissionaisPage() {
     setEditandoId("")
     setNomeEdicao("")
     setCargoIdEdicao("")
-
-    toast.success("Edição cancelada.")
   }
 
   function buscarNomeCargo(cargo_id: string) {

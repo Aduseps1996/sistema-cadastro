@@ -114,6 +114,12 @@ export default function RepresentantesPage() {
     usuarioSistema?.perfil === "Administrador" ||
     usuarioSistema?.perfil === "Recepção"
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Representantes"
+  }, [])
+
+
   useEffect(() => {
     const consulta = query(
       collection(db, "pessoas"),
@@ -366,8 +372,6 @@ export default function RepresentantesPage() {
     setAssociadoIdEdicao("")
     setPessoaIdEdicao("")
     setTipoEdicao("")
-
-    toast.success("Edição cancelada.")
   }
 
   // =====================================================

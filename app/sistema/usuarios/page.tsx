@@ -102,6 +102,11 @@ export default function UsuariosPage() {
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
   const [profissionalIdEdicao, setProfissionalIdEdicao] = useState("")
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Usuários"
+  }, [])
+
   // =====================================================
   // CONSULTA EM TEMPO REAL
   // =====================================================
@@ -542,10 +547,13 @@ export default function UsuariosPage() {
         {/* BOTÃO */}
         <Botao
           onClick={adicionarUsuario}
+          disabled={acaoEmAndamento === "adicionar_usuario"}
           variante="primario"
           className="h-11 px-5 mt-4"
         >
-          Adicionar usuário
+          {acaoEmAndamento === "adicionar_usuario"
+            ? "Adicionando..."
+            : "Adicionar usuário"}
         </Botao>
 
       </section>
@@ -646,13 +654,11 @@ export default function UsuariosPage() {
 
                             <Input
                               type="email"
-                              placeholder="E-mail"
                               value={emailEdicao}
-                              onChange={(e) =>
-                                setEmailEdicao(e.target.value)
-                              }
+                              onChange={() => {}}
+                              disabled
+                              className="bg-zinc-100 dark:bg-zinc-800 cursor-not-allowed"
                             />
-
                           </div>
 
                         ) : (
@@ -754,10 +760,11 @@ export default function UsuariosPage() {
                                 onClick={() =>
                                   salvarEdicaoUsuario(usuario.id!)
                                 }
+                                disabled={acaoEmAndamento === `salvar_${usuario.id}`}
                                 variante="primario"
                                 className="px-2 py-1.5 text-xs"
                               >
-                                Salvar
+                                {acaoEmAndamento === `salvar_${usuario.id}` ? "Salvando..." : "Salvar"}
                               </Botao>
 
                               {/* CANCELAR */}

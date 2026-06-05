@@ -44,6 +44,12 @@ export default function ConveniosPage() {
 
   const [acaoEmAndamento, setAcaoEmAndamento] = useState("")
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Convênios"
+  }, [])
+
+
   useEffect(() => {
     const consulta = query(
       collection(db, "convenios"),

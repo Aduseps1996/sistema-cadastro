@@ -115,6 +115,11 @@ export default function InicioPage() {
   const [editObservacao, setEditObservacao] = useState("")
   /* Fim modal */
 
+  /* Configurar título da página */
+  useEffect(() => {
+    document.title = "Controle de Atendimento - Início"
+  }, [])
+
   /* Carregar pessoas */
   useEffect(() => {
     const consulta = query(collection(db, "pessoas"), orderBy("nome", "asc"))
