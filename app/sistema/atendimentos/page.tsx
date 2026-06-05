@@ -13,6 +13,7 @@ import {
   doc,
   updateDoc,
   setDoc,
+  getDoc,
   type Timestamp
 } from "firebase/firestore"
 
@@ -92,6 +93,31 @@ type Atendimento = {
   inicio_atendimento?: Timestamp | null
   fim_atendimento?: Timestamp | null
 }
+
+/* TIPOS PARA ESCALA OPERACIONAL */
+type TurnoEscala = "manha" | "tarde"
+
+type DiaSemanaEscala =
+  | "segunda"
+  | "terca"
+  | "quarta"
+  | "quinta"
+  | "sexta"
+
+type AtividadeEscala =
+  | "atendimento"
+  | "coordenacao"
+  | "telefoneFixo"
+  | "telefoneCelular"
+  | "atividadesDiversas"
+  | "atividadesExternas"
+  | "forum"
+  | "advogadoForum"
+
+type EscalaOperacional = Record<
+  DiaSemanaEscala,
+  Record<TurnoEscala, Partial<Record<AtividadeEscala, string[]>>>
+>
 
 // =====================================================
 // LISTA FIXA DE TIPOS DE REPRESENTANTE
@@ -221,6 +247,12 @@ export default function AtendimentosPage() {
   // =====================================================
   const [profissionalChamadaId, setProfissionalChamadaId] = useState("")
 
+
+  const [escalaSemana, setEscalaSemana] =
+    useState<EscalaOperacional | null>(null)
+
+
+
   // =====================================================
   // ESTADOS DE DADOS CARREGADOS DO FIRESTORE
   // =====================================================
@@ -231,6 +263,13 @@ export default function AtendimentosPage() {
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([])
+
+  /* Permissões de Notificação */
+  const [permissaoNotificacao, setPermissaoNotificacao] = useState<
+    NotificationPermission | "indisponivel"
+  >("default")
+
+  const [notificacoesJaEnviadas, setNotificacoesJaEnviadas] = useState<string[]>([])
 
 
   // =====================================================
@@ -243,6 +282,17 @@ export default function AtendimentosPage() {
     })
 
     return () => unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    if (!("Notification" in window)) {
+      setPermissaoNotificacao("indisponivel")
+      return
+    }
+
+    setPermissaoNotificacao(Notification.permission)
   }, [])
 
 
@@ -378,6 +428,24 @@ export default function AtendimentosPage() {
     return () => unsubscribe()
   }, [])
 
+  /* CARREGAR ESCALA SEMANAL */
+  useEffect(() => {
+    async function carregarEscalaSemanal() {
+      const referencia = doc(db, "escalas_semanais", "semana_atual")
+      const documento = await getDoc(referencia)
+
+      if (!documento.exists()) return
+
+      const dados = documento.data()
+
+      if (dados.escalaSemana) {
+        setEscalaSemana(dados.escalaSemana as EscalaOperacional)
+      }
+    }
+
+    carregarEscalaSemanal()
+  }, [])
+
   // =====================================================
   // UTILITÁRIOS DE TEXTO
   // =====================================================
@@ -421,6 +489,73 @@ export default function AtendimentosPage() {
       dataAtendimento.getMonth() === hoje.getMonth() &&
       dataAtendimento.getFullYear() === hoje.getFullYear()
     )
+  }
+
+  function obterDiaSemanaAtual(): DiaSemanaEscala | null {
+    const hoje = new Date().getDay()
+
+    const mapa: Record<number, DiaSemanaEscala> = {
+      1: "segunda",
+      2: "terca",
+      3: "quarta",
+      4: "quinta",
+      5: "sexta"
+    }
+
+    return mapa[hoje] || null
+  }
+
+  function obterTurnoAtual(): TurnoEscala | null {
+    const hora = new Date().getHours()
+
+    if (hora >= 8 && hora < 13) return "manha"
+    if (hora >= 13 && hora < 18) return "tarde"
+
+    return null
+  }
+
+
+  function atendenteLogadoEstaEscaladoAgora() {
+    if (!usuarioSistema?.profissional_id) return false
+    if (!escalaSemana) return false
+
+    const profissionalLogado = profissionais.find(
+      (profissional) => profissional.id === usuarioSistema.profissional_id
+    )
+
+    if (!profissionalLogado) return false
+
+    const diaAtual = obterDiaSemanaAtual()
+    const turnoAtual = obterTurnoAtual()
+
+    if (!diaAtual || !turnoAtual) return false
+
+    const nomesEscalados =
+      escalaSemana[diaAtual]?.[turnoAtual]?.atendimento || []
+
+    return nomesEscalados.includes(profissionalLogado.nome)
+  }
+
+
+  function atendenteLogadoEstaLivre() {
+    if (!usuarioSistema?.profissional_id) return false
+
+    const atendimentoAberto = atendimentosDoDia.find(
+      (atendimento) =>
+        atendimento.status === "em_atendimento" &&
+        atendimento.profissional_id === usuarioSistema.profissional_id
+    )
+
+    return !atendimentoAberto
+  }
+
+  function minutosDeEspera(atendimento: Atendimento) {
+    if (!atendimento.data_hora_chegada?.seconds) return 0
+
+    const chegadaMs = atendimento.data_hora_chegada.seconds * 1000
+    const agoraMs = new Date().getTime()
+
+    return Math.floor((agoraMs - chegadaMs) / 1000 / 60)
   }
 
   // =====================================================
@@ -951,6 +1086,45 @@ export default function AtendimentosPage() {
     }
   }
 
+  async function solicitarPermissaoNotificacao() {
+    if (typeof window === "undefined") return
+
+    if (!("Notification" in window)) {
+      toast.warning("Este navegador não suporta notificações.")
+      return
+    }
+
+    const permissao = await Notification.requestPermission()
+
+    setPermissaoNotificacao(permissao)
+
+    if (permissao === "granted") {
+      toast.success("Notificações ativadas.")
+    } else {
+      toast.warning("As notificações não foram permitidas.")
+    }
+  }
+
+  function enviarNotificacaoWindows(
+    chave: string,
+    titulo: string,
+    mensagem: string
+  ) {
+    if (typeof window === "undefined") return
+    if (!("Notification" in window)) return
+    if (Notification.permission !== "granted") return
+
+    if (notificacoesJaEnviadas.includes(chave)) return
+
+    new Notification(titulo, {
+      body: mensagem,
+      icon: "/favicon.ico",
+      tag: chave
+    })
+
+    setNotificacoesJaEnviadas((atual) => [...atual, chave])
+  }
+
   // =====================================================
   // AÇÃO: INICIAR ATENDIMENTO
   // =====================================================
@@ -1006,9 +1180,9 @@ export default function AtendimentosPage() {
     }
 
     if (atendimentoAtual.status !== "em_atendimento") {
-  toast.warning("Só é possível finalizar atendimento que já foi iniciado.")
-  return
-}
+      toast.warning("Só é possível finalizar atendimento que já foi iniciado.")
+      return
+    }
 
     try {
       setAcaoEmAndamento(`finalizar_${id}`)
@@ -1350,6 +1524,89 @@ export default function AtendimentosPage() {
 
   const profissionalAutomatico = profissionalDoUsuarioLogado()
 
+  useEffect(() => {
+    if (!podeOperarAtendimento) return
+    if (permissaoNotificacao !== "granted") return
+    if (!usuarioSistema?.profissional_id) return
+    if (!atendenteLogadoEstaEscaladoAgora()) return
+
+    const estaLivre = atendenteLogadoEstaLivre()
+
+    const atendimentosAguardando = atendimentosDoDia.filter(
+      (atendimento) => atendimento.status === "aguardando"
+    )
+
+    const atendimentosDirecionadosParaMim = atendimentosAguardando.filter(
+      (atendimento) =>
+        atendimento.profissional_preferencial_id === usuarioSistema.profissional_id
+    )
+
+    atendimentosDirecionadosParaMim.forEach((atendimento) => {
+      const pessoa = buscarPessoa(atendimento.pessoa_id)
+      const chave = `direcionado_${atendimento.id}_${usuarioSistema.profissional_id}`
+
+      enviarNotificacaoWindows(
+        chave,
+        "Novo atendimento direcionado para você",
+        `${pessoa?.nome || "Associado"} está aguardando atendimento.`
+      )
+    })
+
+    const atendimentosMaisDe15Min = atendimentosAguardando.filter(
+      (atendimento) => minutosDeEspera(atendimento) >= 15
+    )
+
+    atendimentosMaisDe15Min.forEach((atendimento) => {
+      const pessoa = buscarPessoa(atendimento.pessoa_id)
+
+      if (atendimento.profissional_preferencial_id) {
+        if (
+          atendimento.profissional_preferencial_id !== usuarioSistema.profissional_id
+        ) {
+          return
+        }
+
+        const chave = `espera_15_preferencial_${atendimento.id}_${usuarioSistema.profissional_id}`
+
+        enviarNotificacaoWindows(
+          chave,
+          "Atendimento aguardando há mais de 15 minutos",
+          `${pessoa?.nome || "Associado"} está direcionado para você.`
+        )
+
+        return
+      }
+
+      if (!estaLivre) return
+
+      const chave = `espera_15_geral_${atendimento.id}_${usuarioSistema.profissional_id}`
+
+      enviarNotificacaoWindows(
+        chave,
+        "Atendimento aguardando há mais de 15 minutos",
+        `${pessoa?.nome || "Associado"} está aguardando na fila.`
+      )
+    })
+
+    if (atendimentosAguardando.length > 3 && estaLivre) {
+      const chave = `fila_maior_3_${new Date().toLocaleDateString("pt-BR")}_${usuarioSistema.profissional_id}`
+
+      enviarNotificacaoWindows(
+        chave,
+        "Fila com mais de 3 associados aguardando",
+        `Existem ${atendimentosAguardando.length} atendimentos aguardando na fila.`
+      )
+    }
+  }, [
+    atendimentos,
+    profissionais,
+    escalaSemana,
+    permissaoNotificacao,
+    usuarioSistema?.profissional_id,
+    podeOperarAtendimento,
+    notificacoesJaEnviadas
+  ])
+
   function obterNomeProfissional(id?: string | null) {
     if (!id) return null
 
@@ -1379,6 +1636,24 @@ export default function AtendimentosPage() {
           Registro de chegada, fila e controle de atendimento da ADUSEPS.
         </p>
       </div>
+
+      {podeOperarAtendimento && permissaoNotificacao !== "granted" && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/20 dark:text-amber-200">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p>
+              Ative as notificações para receber avisos de atendimentos direcionados e fila em espera.
+            </p>
+
+            <button
+              type="button"
+              onClick={solicitarPermissaoNotificacao}
+              className="h-10 rounded-lg border border-amber-500/40 bg-amber-600 px-4 text-sm font-semibold text-white transition hover:bg-amber-500"
+            >
+              Ativar notificações
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ==================== CARDS RESUMO ==================== */}
 

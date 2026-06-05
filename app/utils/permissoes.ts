@@ -13,14 +13,16 @@ export function podeAcessarPagina(
       "/sistema/atendimentos",
       "/sistema/pessoas",
       "/sistema/associados",
-      "/sistema/representantes"
+      "/sistema/representantes",
+      "/sistema/escala-atendimentos"
     ].includes(pagina)
   }
 
   if (perfil === "Atendente") {
     return [
       "/sistema/inicio",
-      "/sistema/atendimentos"
+      "/sistema/atendimentos",
+      "/sistema/escala-atendimentos"
     ].includes(pagina)
   }
 
@@ -30,7 +32,8 @@ export function podeAcessarPagina(
       "/sistema/atendimentos",
       "/sistema/pessoas",
       "/sistema/associados",
-      "/sistema/representantes"
+      "/sistema/representantes",
+      "/sistema/escala-atendimentos"
     ].includes(pagina)
   }
 

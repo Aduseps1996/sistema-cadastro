@@ -31,6 +31,7 @@ type ItemMenu = {
 const itensMenu: ItemMenu[] = [
   { nome: "Início", href: "/sistema/inicio", grupo: "OPERACIONAL" },
   { nome: "Atendimentos", href: "/sistema/atendimentos", grupo: "OPERACIONAL" },
+  { nome: "Escala de Atendimentos", href: "/sistema/escala-atendimentos", grupo: "OPERACIONAL" },
   { nome: "Pessoas", href: "/sistema/pessoas", grupo: "CADASTROS" },
   { nome: "Associados", href: "/sistema/associados", grupo: "CADASTROS" },
   { nome: "Representantes", href: "/sistema/representantes", grupo: "CADASTROS" },
@@ -38,7 +39,6 @@ const itensMenu: ItemMenu[] = [
   { nome: "Profissionais", href: "/sistema/profissionais", grupo: "CADASTROS" },
   { nome: "Convênios", href: "/sistema/convenios", grupo: "CADASTROS" },
   { nome: "Usuários", href: "/sistema/usuarios", grupo: "ADMINISTRAÇÃO" },
-  { nome: "Escala de Atendimentos", href: "/sistema/escala-atendimentos", grupo: "ADMINISTRAÇÃO" }
 ]
 
 export default function SistemaLayout({
@@ -163,6 +163,7 @@ function SistemaLayoutConteudo({
       return [
         "Início",
         "Atendimentos",
+        "Escala de Atendimentos",
         "Pessoas",
         "Associados",
         "Representantes"
@@ -170,7 +171,11 @@ function SistemaLayoutConteudo({
     }
 
     if (perfil === "Atendente") {
-      return ["Início", "Atendimentos"].includes(item)
+      return [
+        "Início", 
+        "Atendimentos", 
+        "Escala de Atendimentos"
+      ].includes(item)
     }
 
     if (perfil === "Consulta") {
