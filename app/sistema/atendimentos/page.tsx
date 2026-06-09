@@ -90,6 +90,8 @@ type Atendimento = {
   motivo_detalhe?: string | null
   observacao?: string
   data_hora_chegada?: Timestamp | null
+  data_hora_chamada?: Timestamp | null
+  data_hora_ultima_chamada?: Timestamp | null
   inicio_atendimento?: Timestamp | null
   fim_atendimento?: Timestamp | null
 }
@@ -1545,83 +1547,30 @@ export default function AtendimentosPage() {
     if (!podeOperarAtendimento) return
     if (permissaoNotificacao !== "granted") return
     if (!usuarioSistema?.profissional_id) return
-    if (!atendenteLogadoEstaEscaladoAgora()) return
 
-    const estaLivre = atendenteLogadoEstaLivre()
-
-    const atendimentosAguardando = atendimentosDoDia.filter(
-      (atendimento) => atendimento.status === "aguardando"
-    )
-
-    const atendimentosDirecionadosParaMim = atendimentosAguardando.filter(
+    const atendimentosChamadosParaMim = atendimentosDoDia.filter(
       (atendimento) =>
-        atendimento.profissional_preferencial_id === usuarioSistema.profissional_id
+        atendimento.status === "chamado" &&
+        atendimento.profissional_id === usuarioSistema.profissional_id
     )
 
-    atendimentosDirecionadosParaMim.forEach((atendimento) => {
-      const pessoa = buscarPessoa(atendimento.pessoa_id)
-      const chave = `direcionado_${atendimento.id}_${usuarioSistema.profissional_id}`
-
-      enviarNotificacaoWindows(
-        chave,
-        "Novo atendimento direcionado para você",
-        `${pessoa?.nome || "Associado"} está aguardando atendimento.`
-      )
-    })
-
-    const atendimentosMaisDe15Min = atendimentosAguardando.filter(
-      (atendimento) => minutosDeEspera(atendimento) >= 15
-    )
-
-    atendimentosMaisDe15Min.forEach((atendimento) => {
+    atendimentosChamadosParaMim.forEach((atendimento) => {
       const pessoa = buscarPessoa(atendimento.pessoa_id)
 
-      if (atendimento.profissional_preferencial_id) {
-        if (
-          atendimento.profissional_preferencial_id !== usuarioSistema.profissional_id
-        ) {
-          return
-        }
-
-        const chave = `espera_15_preferencial_${atendimento.id}_${usuarioSistema.profissional_id}`
-
-        enviarNotificacaoWindows(
-          chave,
-          "Atendimento aguardando há mais de 15 minutos",
-          `${pessoa?.nome || "Associado"} está direcionado para você.`
-        )
-
-        return
-      }
-
-      if (!estaLivre) return
-
-      const chave = `espera_15_geral_${atendimento.id}_${usuarioSistema.profissional_id}`
+      const chave = `chamado_${atendimento.id}_${usuarioSistema.profissional_id}_${atendimento.data_hora_chamada?.seconds || ""}`
 
       enviarNotificacaoWindows(
         chave,
-        "Atendimento aguardando há mais de 15 minutos",
-        `${pessoa?.nome || "Associado"} está aguardando na fila.`
+        "Novo atendimento chamado",
+        `${pessoa?.nome || "Associado"} foi chamado para você atender.`
       )
     })
-
-    if (atendimentosAguardando.length > 3 && estaLivre) {
-      const chave = `fila_maior_3_${new Date().toLocaleDateString("pt-BR")}_${usuarioSistema.profissional_id}`
-
-      enviarNotificacaoWindows(
-        chave,
-        "Fila com mais de 3 associados aguardando",
-        `Existem ${atendimentosAguardando.length} atendimentos aguardando na fila.`
-      )
-    }
   }, [
     atendimentos,
-    profissionais,
-    escalaSemana,
+    pessoas,
     permissaoNotificacao,
     usuarioSistema?.profissional_id,
-    podeOperarAtendimento,
-    notificacoesJaEnviadas
+    podeOperarAtendimento
   ])
 
   function obterNomeProfissional(id?: string | null) {
@@ -2649,7 +2598,7 @@ export default function AtendimentosPage() {
 
           </div>
 
-        </div>
+        </div>  
       )}
     </div>
   )
