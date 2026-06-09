@@ -1030,6 +1030,13 @@ export default function AtendimentosPage() {
       return
     }
 
+    if (atendimento.status !== "chamado") {
+      toast.warning(
+        "Só é possível chamar novamente atendimentos que estão chamados."
+      )
+      return
+    }
+
     try {
       setAcaoEmAndamento(`chamar_novamente_${atendimentoId}`)
 
@@ -1155,6 +1162,20 @@ export default function AtendimentosPage() {
     }
 
     if (acaoEmAndamento) return
+
+    const atendimentoAtual = atendimentos.find(
+      (atendimento) => atendimento.id === id
+    )
+
+    if (!atendimentoAtual) {
+      toast.error("Atendimento não encontrado.")
+      return
+    }
+
+    if (atendimentoAtual.status !== "chamado") {
+      toast.warning("Só é possível iniciar atendimento que está chamado.")
+      return
+    }
 
     try {
       setAcaoEmAndamento(`iniciar_${id}`)
@@ -2598,7 +2619,7 @@ export default function AtendimentosPage() {
 
           </div>
 
-        </div>  
+        </div>
       )}
     </div>
   )
