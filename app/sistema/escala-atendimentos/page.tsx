@@ -74,9 +74,9 @@ const turnos: { id: Turno; nome: string }[] = [
 ]
 
 const atividadesManha: { id: Atividade; nome: string }[] = [
-  { id: "atendimento", nome: "Atendimento" },
-  { id: "telefoneFixo", nome: "Atendimento ligação telefone fixo" },
-  { id: "telefoneCelular", nome: "Atendimento telefone celular / WhatsApp" },
+  { id: "atendimento", nome: "Atendimento Bancada" },
+  { id: "telefoneFixo", nome: "Atendimento telefone fixo" },
+  { id: "telefoneCelular", nome: "Atendimento celular / WhatsApp" },
   { id: "atividadesDiversas", nome: "Atividades diversas / petições" },
   { id: "forum", nome: "Fórum" },
   { id: "advogadoForum", nome: "Advogado fórum" }
@@ -85,8 +85,8 @@ const atividadesManha: { id: Atividade; nome: string }[] = [
 const atividadesTarde: { id: Atividade; nome: string }[] = [
   { id: "atendimento", nome: "Atendimento" },
   { id: "coordenacao", nome: "Atendimento coordenação" },
-  { id: "telefoneFixo", nome: "Atendimento ligação telefone fixo" },
-  { id: "telefoneCelular", nome: "Atendimento telefone celular / WhatsApp" },
+  { id: "telefoneFixo", nome: "Atendimento telefone fixo" },
+  { id: "telefoneCelular", nome: "Atendimento celular / WhatsApp" },
   { id: "atividadesDiversas", nome: "Atividades diversas / petições" },
   { id: "atividadesExternas", nome: "Atividades externas" }
 ]
