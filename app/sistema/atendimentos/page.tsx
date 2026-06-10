@@ -1142,11 +1142,18 @@ export default function AtendimentosPage() {
 
     if (notificacoesJaEnviadas.includes(chave)) return
 
-    new Notification(titulo, {
+    const notificacao = new Notification(titulo, {
       body: mensagem,
-      icon: "/favicon.ico",
-      tag: chave
+      icon: "/logos/logo.png",
+      badge: "/logos/logo.png",
+      tag: chave,
+      silent: false,
+      requireInteraction: false
     })
+
+    notificacao.onclick = () => {
+      window.focus()
+    }
 
     setNotificacoesJaEnviadas((atual) => [...atual, chave])
   }
@@ -1582,8 +1589,8 @@ export default function AtendimentosPage() {
 
       enviarNotificacaoWindows(
         chave,
-        "Novo atendimento chamado",
-        `${pessoa?.nome || "Associado"} foi chamado para você atender.`
+        "ADUSEPS • Novo atendimento",
+        `${pessoa?.nome || "Associado"} está aguardando seu atendimento.`
       )
     })
   }, [
